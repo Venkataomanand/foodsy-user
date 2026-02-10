@@ -19,7 +19,7 @@ This is the customer-facing website for the Foodsy platform. It allows users to 
 ## 📦 Getting Started
 1. Clone the repository.
 2. Install dependencies: `npm install`
-3. Start development server: `npm run dev` (Default: http://localhost:5173)
+3. Start development server: `npm run dev` (Default: http://localhost:5174)
 4. Build for production: `npm run build`
 
 ## 🔗 Related Repository
