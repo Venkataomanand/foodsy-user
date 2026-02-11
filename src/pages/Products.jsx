@@ -15,6 +15,7 @@ export default function Products() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
+    const searchQuery = searchParams.get('search') || '';
     const [activeCategory, setActiveCategory] = useState(categoryFilter || 'All');
 
     useEffect(() => {
@@ -35,9 +36,22 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
-        const matchesCategory = activeCategory === 'All' || product.category.toLowerCase() === activeCategory.toLowerCase();
-        const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            product.description.toLowerCase().includes(searchQuery.toLowerCase());
+        const productCat = (product.category || '').toLowerCase();
+        const productName = (product.name || '').toLowerCase();
+        const productDesc = (product.description || '').toLowerCase();
+        const activeCatLower = activeCategory.toLowerCase();
+
+        let matchesCategory = activeCategory === 'All';
+        if (!matchesCategory) {
+            if (activeCatLower === 'food') {
+                matchesCategory = productCat === 'food' || productCat === 'fastfood';
+            } else {
+                matchesCategory = productCat === activeCatLower;
+            }
+        }
+
+        const matchesSearch = productName.includes(searchQuery.toLowerCase()) ||
+            productDesc.includes(searchQuery.toLowerCase());
 
         return matchesCategory && matchesSearch;
     });
