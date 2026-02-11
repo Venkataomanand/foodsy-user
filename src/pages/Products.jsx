@@ -8,13 +8,6 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 
-const CATEGORY_MAP = {
-    'All': [],
-    'Food': ['Fastfood', 'Soups', 'Maggies', 'Juices', 'Soft drinks'],
-    'Vegetables': [],
-    'Grocery': [],
-    'Combos': []
-};
 
 export default function Products() {
     const { products, loading } = useProduct();
@@ -22,11 +15,7 @@ export default function Products() {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
-    const subCategoryFilter = searchParams.get('subcategory');
-    const searchQuery = searchParams.get('search') || '';
-
     const [activeCategory, setActiveCategory] = useState(categoryFilter || 'All');
-    const [activeSubCategory, setActiveSubCategory] = useState(subCategoryFilter || 'All');
 
     useEffect(() => {
         if (categoryFilter) {
@@ -35,13 +24,7 @@ export default function Products() {
         } else if (!searchQuery) {
             setActiveCategory('All');
         }
-
-        if (subCategoryFilter) {
-            setActiveSubCategory(subCategoryFilter);
-        } else {
-            setActiveSubCategory('All');
-        }
-    }, [categoryFilter, subCategoryFilter, searchQuery]);
+    }, [categoryFilter, searchQuery]);
 
     if (loading) {
         return (
@@ -52,31 +35,14 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
-        const productCat = product.category;
-
-        let matchesCategory = false;
-        if (activeCategory === 'All') {
-            matchesCategory = true;
-        } else if (activeCategory === 'Food') {
-            // If main category is Food, matches if it's one of the subcategories OR literally 'Food'
-            matchesCategory = CATEGORY_MAP['Food'].includes(productCat) || productCat === 'Food';
-
-            // Further filter by subcategory if one is selected
-            if (activeSubCategory !== 'All') {
-                matchesCategory = productCat === activeSubCategory;
-            }
-        } else {
-            matchesCategory = productCat === activeCategory;
-        }
-
+        const matchesCategory = activeCategory === 'All' || product.category.toLowerCase() === activeCategory.toLowerCase();
         const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
             product.description.toLowerCase().includes(searchQuery.toLowerCase());
 
         return matchesCategory && matchesSearch;
     });
 
-    const mainCategories = Object.keys(CATEGORY_MAP);
-    const subCategories = activeCategory === 'Food' ? ['All', ...CATEGORY_MAP['Food']] : [];
+    const categories = ['All', 'Fastfood', 'Soups', 'Maggies', 'Juices', 'Soft drinks', 'Vegetables', 'Grocery', 'Combos'];
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -102,56 +68,27 @@ export default function Products() {
                     </div>
                 </div>
 
-                {/* Main Categories */}
-                <div className="flex items-center space-x-2 overflow-x-auto pb-2 border-b border-gray-100">
-                    <Filter className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0" />
-                    {mainCategories.map(cat => (
+                <div className="flex items-center space-x-2 overflow-x-auto pb-2">
+                    <Filter className="h-5 w-5 text-gray-500 mr-2" />
+                    {categories.map(cat => (
                         <button
                             key={cat}
                             onClick={() => {
                                 setActiveCategory(cat);
-                                setActiveSubCategory('All');
-                                searchParams.delete('search');
-                                searchParams.delete('subcategory');
+                                searchParams.delete('search'); // Clear search when changing category
                                 if (cat === 'All') searchParams.delete('category');
                                 else searchParams.set('category', cat.toLowerCase());
                                 setSearchParams(searchParams);
                             }}
-                            className={`px-5 py-2.5 rounded-xl text-sm font-bold transition-all flex-shrink-0 ${activeCategory === cat
-                                ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                                : 'bg-white text-gray-600 hover:bg-gray-50 border border-gray-100'
+                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat
+                                ? 'bg-primary text-white shadow-md'
+                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
                                 }`}
                         >
                             {cat}
                         </button>
                     ))}
                 </div>
-
-                {/* Sub Categories for Food */}
-                {subCategories.length > 0 && (
-                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 animate-in fade-in slide-in-from-top-2 duration-300">
-                        <div className="w-8 h-8 flex items-center justify-center text-primary/50 flex-shrink-0">
-                            <ChevronRight className="h-4 w-4" />
-                        </div>
-                        {subCategories.map(sub => (
-                            <button
-                                key={sub}
-                                onClick={() => {
-                                    setActiveSubCategory(sub);
-                                    if (sub === 'All') searchParams.delete('subcategory');
-                                    else searchParams.set('subcategory', sub);
-                                    setSearchParams(searchParams);
-                                }}
-                                className={`px-4 py-2 rounded-lg text-xs font-black uppercase tracking-wider transition-all flex-shrink-0 ${activeSubCategory === sub
-                                    ? 'bg-gray-900 text-white shadow-md'
-                                    : 'bg-white text-gray-500 hover:bg-gray-100 border border-gray-200'
-                                    }`}
-                            >
-                                {sub}
-                            </button>
-                        ))}
-                    </div>
-                )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
