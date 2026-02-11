@@ -1,11 +1,13 @@
-import { Plus, Star, Clock } from 'lucide-react';
+import { Plus, Minus, Star, Clock } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { motion } from 'framer-motion';
 
 export default function ProductCard({ product }) {
-    const { addToCart } = useCart();
+    const { addToCart, cartItems, updateQuantity } = useCart();
 
     const isCombo = product.category.toLowerCase() === 'combos';
+    const cartItem = cartItems.find(item => item.id === product.id);
+    const quantity = cartItem ? cartItem.quantity : 0;
 
     return (
         <motion.div
@@ -53,13 +55,31 @@ export default function ProductCard({ product }) {
                     {product.description}
                 </p>
 
-                <button
-                    onClick={() => addToCart(product)}
-                    className="w-full flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2.5 rounded-xl hover:bg-primary transition-all duration-300 font-bold shadow-sm active:scale-95"
-                >
-                    <Plus className="h-4 w-4" />
-                    <span>Add to Cart</span>
-                </button>
+                {quantity > 0 ? (
+                    <div className="flex items-center justify-between bg-primary/10 rounded-xl p-1">
+                        <button
+                            onClick={() => updateQuantity(product.id, quantity - 1)}
+                            className="p-2 text-primary hover:bg-primary hover:text-white rounded-lg transition-all"
+                        >
+                            <Minus className="h-4 w-4" />
+                        </button>
+                        <span className="font-black text-primary text-lg">{quantity}</span>
+                        <button
+                            onClick={() => updateQuantity(product.id, quantity + 1)}
+                            className="p-2 text-primary hover:bg-primary hover:text-white rounded-lg transition-all"
+                        >
+                            <Plus className="h-4 w-4" />
+                        </button>
+                    </div>
+                ) : (
+                    <button
+                        onClick={() => addToCart(product)}
+                        className="w-full flex items-center justify-center space-x-2 bg-gray-900 text-white px-4 py-2.5 rounded-xl hover:bg-primary transition-all duration-300 font-bold shadow-sm active:scale-95"
+                    >
+                        <Plus className="h-4 w-4" />
+                        <span>Add to Cart</span>
+                    </button>
+                )}
             </div>
         </motion.div>
     );
