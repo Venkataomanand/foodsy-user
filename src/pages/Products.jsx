@@ -21,7 +21,12 @@ export default function Products() {
     useEffect(() => {
         if (categoryFilter) {
             const standardized = categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1).toLowerCase();
-            setActiveCategory(standardized);
+            // Map legacy categories to Food
+            if (['Soups', 'Maggies', 'Juices', 'Soft drinks', 'Combos'].includes(standardized)) {
+                setActiveCategory('Food');
+            } else {
+                setActiveCategory(standardized);
+            }
         } else if (!searchQuery) {
             setActiveCategory('All');
         }
@@ -36,19 +41,18 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
-        const productCat = (product.category || '').toLowerCase();
+        const rawCat = (product.category || '').toLowerCase();
         const productName = (product.name || '').toLowerCase();
         const productDesc = (product.description || '').toLowerCase();
         const activeCatLower = activeCategory.toLowerCase();
 
-        let matchesCategory = activeCategory === 'All';
-        if (!matchesCategory) {
-            if (activeCatLower === 'food') {
-                matchesCategory = productCat === 'food' || productCat === 'fastfood';
-            } else {
-                matchesCategory = productCat === activeCatLower;
-            }
+        // Standardize product category for filtering
+        let productCat = rawCat;
+        if (['soups', 'maggies', 'juices', 'soft drinks', 'combos', 'fastfood'].includes(rawCat)) {
+            productCat = 'food';
         }
+
+        let matchesCategory = activeCategory === 'All' || productCat === activeCatLower;
 
         const matchesSearch = productName.includes(searchQuery.toLowerCase()) ||
             productDesc.includes(searchQuery.toLowerCase());
@@ -56,7 +60,7 @@ export default function Products() {
         return matchesCategory && matchesSearch;
     });
 
-    const categories = ['All', 'Food', 'Soups', 'Maggies', 'Juices', 'Soft drinks', 'Vegetables', 'Grocery', 'Combos'];
+    const categories = ['All', 'Food', 'Vegetables', 'Grocery'];
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
