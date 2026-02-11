@@ -64,20 +64,25 @@ export default function Cart() {
                                                 </h3>
                                             </div>
                                             <p className="mt-1 text-sm font-medium text-gray-900">₹{item.price}</p>
+                                            {item.selectedOption && (
+                                                <p className="mt-1 text-xs font-black text-primary uppercase">
+                                                    Option: {item.selectedOption}
+                                                </p>
+                                            )}
                                             <p className="mt-1 text-sm text-gray-500">{item.category}</p>
                                         </div>
 
                                         <div className="mt-4 sm:mt-0 sm:pr-9">
                                             <div className="flex items-center border border-gray-300 rounded-md w-max">
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                                    onClick={() => updateQuantity(item.id, item.quantity - 1, item.selectedOption)}
                                                     className="p-1 hover:bg-gray-100 text-gray-600"
                                                 >
                                                     <Minus className="h-4 w-4" />
                                                 </button>
                                                 <span className="px-4 py-1 text-gray-900 font-medium">{item.quantity}</span>
                                                 <button
-                                                    onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                                    onClick={() => updateQuantity(item.id, item.quantity + 1, item.selectedOption)}
                                                     className="p-1 hover:bg-gray-100 text-gray-600"
                                                 >
                                                     <Plus className="h-4 w-4" />
@@ -86,7 +91,7 @@ export default function Cart() {
 
                                             <div className="absolute top-0 right-0">
                                                 <button
-                                                    onClick={() => removeFromCart(item.id)}
+                                                    onClick={() => removeFromCart(item.id, item.selectedOption)}
                                                     className="-m-2 p-2 inline-flex text-gray-400 hover:text-red-500"
                                                 >
                                                     <span className="sr-only">Remove</span>

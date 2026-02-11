@@ -10,23 +10,17 @@ export default function ProductCard({ product }) {
     const isCombo = product.category.toLowerCase() === 'combos';
     const isBeverageCombo = product.name.toLowerCase().includes('beverage');
     const isMilkshakeCombo = product.name.toLowerCase().includes('milkshake');
-    const isFriedRice = product.name.toLowerCase().includes('fried rice');
-    const isNoodles = product.name.toLowerCase().includes('noodles');
-    const isManchuria = product.name.toLowerCase().includes('manchuria');
-    const isChilliChicken = product.name.toLowerCase().includes('chilli chicken');
 
-    const needsOptions = isBeverageCombo || isMilkshakeCombo || isFriedRice || isNoodles || isManchuria || isChilliChicken;
+    const needsOptions = isBeverageCombo || isMilkshakeCombo;
 
     const beverageOptions = ['Coke', 'Sprite', 'Thums Up'];
     const milkshakeOptions = ['Chocolate', 'Vanilla', 'Strawberry'];
-    const portionOptions = ['Half', 'Full'];
 
     let options = [];
     if (isBeverageCombo) options = beverageOptions;
     else if (isMilkshakeCombo) options = milkshakeOptions;
-    else if (isFriedRice || isNoodles || isManchuria || isChilliChicken) options = portionOptions;
 
-    const optionLabel = (isFriedRice || isNoodles || isManchuria || isChilliChicken) ? 'Portion' : (isBeverageCombo ? 'Beverage' : 'Shake');
+    const optionLabel = isBeverageCombo ? 'Beverage' : 'Shake';
 
     // Get all variants of this product in cart
     const productVariants = cartItems.filter(item => item.id === product.id);
