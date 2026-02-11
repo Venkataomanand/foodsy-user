@@ -156,13 +156,7 @@ export default function Orders() {
                                 <div className="mb-8">
                                     <p className="font-medium text-gray-700 mb-2">Items:</p>
                                     <p className="text-gray-600">
-                                        {order.items.map((i, idx) => (
-                                            <span key={idx}>
-                                                {i.name} (x{i.quantity})
-                                                {i.selectedOption && <span className="text-xs font-black text-primary ml-1">[{i.selectedOption}]</span>}
-                                                {idx < order.items.length - 1 ? ', ' : ''}
-                                            </span>
-                                        ))}
+                                        {order.items.map(i => `${i.name} (x${i.quantity})`).join(', ')}
                                     </p>
                                 </div>
 

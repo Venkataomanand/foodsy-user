@@ -16,42 +16,8 @@ export default function Checkout() {
     const [formData, setFormData] = useState({
         firstName: '',
         lastName: '',
-        address: '',
-        area: '',
-        phone: ''
+        address: ''
     });
-    const [deliveryDistance, setDeliveryDistance] = useState(0);
-    const [deliveryCharge, setDeliveryCharge] = useState(0);
-
-    const AREAS = [
-        { name: "JNTUK / Nagavanam", distance: 0 },
-        { name: "Bhanugudi Junction", distance: 2 },
-        { name: "Cinema Road", distance: 3 },
-        { name: "Main Road", distance: 4 },
-        { name: "Sarpavaram Junction", distance: 5 },
-        { name: "Indrapalem", distance: 6 },
-        { name: "Gaigolupadu", distance: 7 },
-        { name: "Turangi", distance: 8 },
-        { name: "Vakalapudi", distance: 9 }
-    ];
-
-    const calculateDeliveryCharge = (dist) => {
-        if (dist <= 5) return 25;
-        return 25 + (dist - 5) * 7;
-    };
-
-    const handleAreaChange = (e) => {
-        const selectedArea = AREAS.find(a => a.name === e.target.value);
-        if (selectedArea) {
-            setFormData({ ...formData, area: selectedArea.name });
-            setDeliveryDistance(selectedArea.distance);
-            setDeliveryCharge(calculateDeliveryCharge(selectedArea.distance));
-        } else {
-            setFormData({ ...formData, area: '' });
-            setDeliveryDistance(0);
-            setDeliveryCharge(0);
-        }
-    };
 
     // Generate Custom ID: First 2 chars of Name (uppercase) + Date (YYYYMMDD) + Random
     const generateOrderId = (firstName) => {
@@ -69,26 +35,18 @@ export default function Checkout() {
 
         const email = currentUser?.email || 'guest@example.com';
         const newOrderId = generateOrderId(formData.firstName);
-        const finalTotal = cartTotal + deliveryCharge;
+        const finalTotal = cartTotal + 5;
 
         try {
             const currentOrder = {
                 id: newOrderId,
                 userId: currentUser?.uid || 'guest',
                 email: email,
-                firstName: formData.firstName,
-                lastName: formData.lastName,
-                address: `${formData.address}, ${formData.area}`,
-                area: formData.area,
-                distance: deliveryDistance,
-                deliveryFee: deliveryCharge,
-                phone: formData.phone,
                 items: cartItems.map(item => ({
                     id: item.id,
                     name: item.name,
                     price: item.price,
-                    quantity: item.quantity,
-                    selectedOption: item.selectedOption || null
+                    quantity: item.quantity
                 })),
                 total: finalTotal,
                 status: 'Placed',
@@ -165,26 +123,19 @@ export default function Checkout() {
                         <div className="mb-8">
                             <h3 className="text-lg font-semibold text-gray-900 mb-4">Invoice</h3>
                             <div className="space-y-4">
-                                {orderData.items.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between text-sm">
-                                        <div>
-                                            <span className="text-gray-600">{item.name} x {item.quantity}</span>
-                                            {item.selectedOption && (
-                                                <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded uppercase">
-                                                    {item.selectedOption}
-                                                </span>
-                                            )}
-                                        </div>
+                                {orderData.items.map((item) => (
+                                    <div key={item.id} className="flex justify-between text-sm">
+                                        <span className="text-gray-600">{item.name} x {item.quantity}</span>
                                         <span className="font-medium text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
                                     </div>
                                 ))}
-                                <div className="flex justify-between text-base font-medium">
+                                <div className="border-t border-gray-200 pt-4 flex justify-between text-base font-medium">
                                     <span className="text-gray-900">Subtotal</span>
-                                    <span className="text-gray-900">₹{cartTotal.toFixed(2)}</span>
+                                    <span className="text-gray-900">₹{(orderData.total - 5).toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-base font-medium">
-                                    <span className="text-gray-900">Delivery Fee ({orderData.distance}km)</span>
-                                    <span className="text-gray-900">₹{orderData.deliveryFee.toFixed(2)}</span>
+                                    <span className="text-gray-900">Shipping</span>
+                                    <span className="text-gray-900">₹5.00</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold">
                                     <span className="text-primary">Total</span>
@@ -255,43 +206,13 @@ export default function Checkout() {
                             </div>
 
                             <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Delivery Area (from JNTUK Center)</label>
-                                <select
-                                    required
-                                    value={formData.area}
-                                    onChange={handleAreaChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                >
-                                    <option value="">Select your area...</option>
-                                    {AREAS.map(area => (
-                                        <option key={area.name} value={area.name}>
-                                            {area.name} ({area.distance} km)
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
-
-                            <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Street Address / House No.</label>
+                                <label className="block text-sm font-medium text-gray-700">Street address</label>
                                 <input
                                     type="text"
                                     required
                                     value={formData.address}
                                     onChange={(e) => setFormData({ ...formData, address: e.target.value })}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                    placeholder="e.g. Flat 402, Sai Residency"
-                                />
-                            </div>
-
-                            <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Phone Number</label>
-                                <input
-                                    type="tel"
-                                    required
-                                    value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                    placeholder="e.g. 9876543210"
                                 />
                             </div>
                         </div>
@@ -318,10 +239,7 @@ export default function Checkout() {
                     </div>
 
                     <div className="border-t border-gray-200 pt-6 flex justify-between items-center">
-                        <div className="flex flex-col">
-                            <span className="text-sm text-gray-500">Delivery Charge: ₹{deliveryCharge.toFixed(2)}</span>
-                            <span className="text-lg font-bold">Total: ₹{(cartTotal + deliveryCharge).toFixed(2)}</span>
-                        </div>
+                        <span className="text-lg font-bold">Total: ₹{(cartTotal + 5).toFixed(2)}</span>
                         <button
                             type="submit"
                             disabled={loading}

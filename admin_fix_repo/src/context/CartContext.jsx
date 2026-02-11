@@ -9,32 +9,32 @@ export function useCart() {
 export function CartProvider({ children }) {
     const [cartItems, setCartItems] = useState([]);
 
-    function addToCart(item, quantity = 1, selectedOption = null) {
+    function addToCart(item, quantity = 1) {
         setCartItems(prevItems => {
-            const existingItem = prevItems.find(i => i.id === item.id && i.selectedOption === selectedOption);
+            const existingItem = prevItems.find(i => i.id === item.id);
             if (existingItem) {
                 return prevItems.map(i =>
-                    (i.id === item.id && i.selectedOption === selectedOption)
+                    i.id === item.id
                         ? { ...i, quantity: i.quantity + quantity }
                         : i
                 );
             }
-            return [...prevItems, { ...item, quantity, selectedOption }];
+            return [...prevItems, { ...item, quantity }];
         });
     }
 
-    function removeFromCart(id, selectedOption = null) {
-        setCartItems(prevItems => prevItems.filter(item => !(item.id === id && item.selectedOption === selectedOption)));
+    function removeFromCart(id) {
+        setCartItems(prevItems => prevItems.filter(item => item.id !== id));
     }
 
-    function updateQuantity(id, quantity, selectedOption = null) {
+    function updateQuantity(id, quantity) {
         if (quantity < 1) {
-            removeFromCart(id, selectedOption);
+            removeFromCart(id);
             return;
         }
         setCartItems(prevItems =>
             prevItems.map(item =>
-                (item.id === id && item.selectedOption === selectedOption) ? { ...item, quantity } : item
+                item.id === id ? { ...item, quantity } : item
             )
         );
     }
