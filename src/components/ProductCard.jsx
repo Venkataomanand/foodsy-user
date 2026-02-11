@@ -45,12 +45,14 @@ export default function ProductCard({ product }) {
         setShowOptions(false);
     };
 
+    const isAvailable = product.available !== false;
+
     return (
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             whileInView={{ opacity: 1, scale: 1 }}
             viewport={{ once: true }}
-            className="group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-transparent hover:border-gray-100"
+            className={`group bg-white rounded-2xl shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden border border-transparent hover:border-gray-100 ${!isAvailable ? 'opacity-75 grayscale' : ''}`}
         >
             <div className="h-48 bg-gray-100 relative overflow-hidden">
                 {product.image ? (
@@ -65,6 +67,11 @@ export default function ProductCard({ product }) {
                         Best Value
                     </div>
                 )}
+                {!isAvailable && (
+                    <div className="absolute top-3 right-3 bg-gray-900/80 backdrop-blur-sm text-white text-[10px] font-black px-2 py-1 rounded-md uppercase tracking-tighter shadow-sm z-20">
+                        Out of Stock
+                    </div>
+                )}
                 <div className="absolute bottom-3 right-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center space-x-1 shadow-sm">
                     <Star className="h-3 w-3 text-yellow-500 fill-yellow-500" />
                     <span className="text-xs font-bold text-gray-900">{product.rating || '4.2'}</span>
@@ -73,7 +80,7 @@ export default function ProductCard({ product }) {
 
             <div className="p-4 relative">
                 <AnimatePresence>
-                    {showOptions && (
+                    {showOptions && isAvailable && (
                         <motion.div
                             initial={{ opacity: 0, y: 20 }}
                             animate={{ opacity: 1, y: 0 }}
@@ -119,7 +126,14 @@ export default function ProductCard({ product }) {
                     {product.description}
                 </p>
 
-                {totalQuantity > 0 && !needsOptions ? (
+                {!isAvailable ? (
+                    <button
+                        disabled
+                        className="w-full flex items-center justify-center space-x-2 bg-gray-100 text-gray-400 px-4 py-2.5 rounded-xl font-bold cursor-not-allowed"
+                    >
+                        <span>Currently Unavailable</span>
+                    </button>
+                ) : totalQuantity > 0 && !needsOptions ? (
                     <div className="flex items-center justify-between bg-primary/10 rounded-xl p-1">
                         <button
                             onClick={() => updateQuantity(product.id, totalQuantity - 1)}
@@ -139,8 +153,8 @@ export default function ProductCard({ product }) {
                     <div className="space-y-2">
                         {productVariants.length > 0 && needsOptions && (
                             <div className="pb-2 space-y-1">
-                                {productVariants.map(variant => (
-                                    <div key={variant.selectedOption} className="flex items-center justify-between bg-gray-50 rounded-lg p-2 text-xs">
+                                {productVariants.map((variant, idx) => (
+                                    <div key={idx} className="flex items-center justify-between bg-gray-50 rounded-lg p-2 text-xs">
                                         <span className="font-bold text-gray-700">{variant.selectedOption}</span>
                                         <div className="flex items-center space-x-2">
                                             <button onClick={() => updateQuantity(product.id, variant.quantity - 1, variant.selectedOption)} className="p-1 text-gray-400 hover:text-red-500"><Minus className="h-3 w-3" /></button>
