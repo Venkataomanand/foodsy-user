@@ -10,11 +10,23 @@ export default function ProductCard({ product }) {
     const isCombo = product.category.toLowerCase() === 'combos';
     const isBeverageCombo = product.name.toLowerCase().includes('beverage');
     const isMilkshakeCombo = product.name.toLowerCase().includes('milkshake');
-    const needsOptions = isBeverageCombo || isMilkshakeCombo;
+    const isFriedRice = product.name.toLowerCase().includes('fried rice');
+    const isNoodles = product.name.toLowerCase().includes('noodles');
+    const isManchuria = product.name.toLowerCase().includes('manchuria');
+    const isChilliChicken = product.name.toLowerCase().includes('chilli chicken');
+
+    const needsOptions = isBeverageCombo || isMilkshakeCombo || isFriedRice || isNoodles || isManchuria || isChilliChicken;
 
     const beverageOptions = ['Coke', 'Sprite', 'Thums Up'];
     const milkshakeOptions = ['Chocolate', 'Vanilla', 'Strawberry'];
-    const options = isBeverageCombo ? beverageOptions : milkshakeOptions;
+    const portionOptions = ['Half', 'Full'];
+
+    let options = [];
+    if (isBeverageCombo) options = beverageOptions;
+    else if (isMilkshakeCombo) options = milkshakeOptions;
+    else if (isFriedRice || isNoodles || isManchuria || isChilliChicken) options = portionOptions;
+
+    const optionLabel = (isFriedRice || isNoodles || isManchuria || isChilliChicken) ? 'Portion' : (isBeverageCombo ? 'Beverage' : 'Shake');
 
     // Get all variants of this product in cart
     const productVariants = cartItems.filter(item => item.id === product.id);
@@ -69,7 +81,7 @@ export default function ProductCard({ product }) {
                             className="absolute inset-0 z-10 bg-white p-4 flex flex-col justify-center"
                         >
                             <div className="flex justify-between items-center mb-4">
-                                <h4 className="text-sm font-black text-gray-900 uppercase">Select {isBeverageCombo ? 'Beverage' : 'Shake'}</h4>
+                                <h4 className="text-sm font-black text-gray-900 uppercase">Select {optionLabel}</h4>
                                 <button onClick={() => setShowOptions(false)} className="text-xs text-gray-400 hover:text-gray-900 font-bold">CANCEL</button>
                             </div>
                             <div className="space-y-2">
