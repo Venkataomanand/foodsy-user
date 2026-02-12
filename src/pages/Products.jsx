@@ -137,6 +137,7 @@ export default function Products() {
                                 customList: list,
                                 status: 'List Received',
                                 date: new Date().toLocaleDateString(),
+                                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                                 createdAt: serverTimestamp()
                             });
 

@@ -93,6 +93,7 @@ export default function Checkout() {
                 total: finalTotal,
                 status: 'Placed',
                 date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 createdAt: serverTimestamp(),
                 paymentMethod: 'Cash on Delivery',
                 paymentStatus: 'Pending',
@@ -131,9 +132,15 @@ export default function Checkout() {
                     </div>
 
                     <div className="p-8">
-                        <div className="border-b border-gray-200 pb-6 mb-6">
-                            <h2 className="text-lg font-medium text-gray-500 mb-1">Order ID</h2>
-                            <p className="text-3xl font-mono font-bold text-gray-900">{orderData.id}</p>
+                        <div className="border-b border-gray-200 pb-6 mb-6 flex justify-between items-end">
+                            <div>
+                                <h2 className="text-lg font-medium text-gray-500 mb-1">Order ID</h2>
+                                <p className="text-3xl font-mono font-bold text-gray-900">{orderData.id}</p>
+                            </div>
+                            <div className="text-right">
+                                <p className="text-xs text-gray-400 uppercase font-bold tracking-widest">Ordered At</p>
+                                <p className="text-sm font-bold text-gray-900">{orderData.date} • {orderData.time}</p>
+                            </div>
                         </div>
 
                         {/* Payment Information */}
