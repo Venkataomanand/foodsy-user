@@ -46,7 +46,7 @@ export default function ShortVideos() {
                         <div className="relative pt-[177.77%] bg-black"> {/* 9:16 Aspect Ratio */}
                             <iframe
                                 className="absolute top-0 left-0 w-full h-full"
-                                src={`https://www.youtube.com/embed/${video.youtubeId}?rel=0&modestbranding=1&loop=1&playlist=${video.youtubeId}`}
+                                src={`https://www.youtube-nocookie.com/embed/${video.youtubeId}?rel=0&modestbranding=1&controls=1&showinfo=0`}
                                 title={video.title}
                                 allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                 allowFullScreen
