@@ -41,22 +41,22 @@ export default function Checkout() {
         { name: "Bhanugudi Junction", distance: 1 },
         { name: "Jagannaickpur", distance: 5 },
         { name: "Kacheripeta", distance: 5 },
-        { name: "Vakalapudi", distance: 6 },
+        { name: "Vakalapudi", distance: 4.6 },
         { name: "Turangi", distance: 5 },
         { name: "Thimmapuram", distance: 8 },
         { name: "Rayudupalem", distance: 7 },
         { name: "Kovvada", distance: 8 },
         { name: "Balaji Cheruvu", distance: 2 },
         { name: "Beach Road", distance: 5 },
-        { name: "Dummulapeta", distance: 6 },
+        { name: "Dummulapeta", distance: 5 },
         { name: "Nagamallithota", distance: 1 },
         { name: "JNTUK Area", distance: 0 }
     ].sort((a, b) => a.name.localeCompare(b.name));
 
     const calculateDeliveryCharge = (dist) => {
         if (dist <= 5) return 25;
-        // Corrected logic: 25 base + 7 for every km AFTER 5
-        const extraKm = dist - 5;
+        // Base 25 for first 5km + 7 for every km after 5
+        const extraKm = Math.ceil(dist - 5);
         return 25 + (extraKm * 7);
     };
 
