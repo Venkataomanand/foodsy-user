@@ -208,14 +208,14 @@ export default function Checkout() {
 
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
                                 {[
-                                    { id: '1', yId: 'tgbNymZ7vqY', title: 'Crispy Chicken ASMR' },
-                                    { id: '2', yId: '7T2R_Sj9z0k', title: 'Perfect Burger Prep' },
-                                    { id: '3', yId: 'LXb3EKWsInQ', title: 'Cake Decorating' }
+                                    { id: '1', yId: 'GZ6r_qNDXuY', title: 'Veg Daal Prep' },
+                                    { id: '2', yId: 'Hm040goA_pW', title: 'Chicken Prep' },
+                                    { id: '3', yId: 'Eplga_RY6Ne', title: 'Quick Breakfast' }
                                 ].map((vid) => (
                                     <div key={vid.id} className="bg-black rounded-lg overflow-hidden relative pt-[177.77%] shadow-md group">
                                         <iframe
                                             className="absolute top-0 left-0 w-full h-full"
-                                            src={`https://www.youtube.com/embed/${vid.yId}?rel=0&modestbranding=1&loop=1&playlist=${vid.yId}`}
+                                            src={`https://www.youtube.com/embed/${vid.yId}?rel=0&modestbranding=1&loop=1&playlist=${vid.yId}&controls=0`}
                                             title={vid.title}
                                             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                                             allowFullScreen
