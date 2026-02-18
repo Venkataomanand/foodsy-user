@@ -24,20 +24,38 @@ export default function Checkout() {
     const [deliveryCharge, setDeliveryCharge] = useState(0);
 
     const AREAS = [
-        { name: "JNTUK / Nagavanam", distance: 0 },
+        { name: "Sarpavaram", distance: 5 },
+        { name: "Ramanayapeta", distance: 4 },
+        { name: "Gandhi Nagar", distance: 3 },
+        { name: "Ashok Nagar", distance: 4 },
+        { name: "Vidya Nagar", distance: 4 },
+        { name: "Bank Colony", distance: 3 },
+        { name: "Revenue Colony", distance: 3 },
+        { name: "Teachers' Colony", distance: 3 },
+        { name: "G.P.T. Colony", distance: 4 },
+        { name: "Maruti Nagar", distance: 4 },
+        { name: "Lalitha Nagar", distance: 4 },
+        { name: "Madura Nagar", distance: 4 },
+        { name: "Santhi Nagar", distance: 4 },
+        { name: "Rama Rao Peta", distance: 3 },
         { name: "Bhanugudi Junction", distance: 2 },
-        { name: "Cinema Road", distance: 3 },
-        { name: "Main Road", distance: 4 },
-        { name: "Sarpavaram Junction", distance: 5 },
-        { name: "Indrapalem", distance: 6 },
-        { name: "Gaigolupadu", distance: 7 },
-        { name: "Turangi", distance: 8 },
-        { name: "Vakalapudi", distance: 9 }
-    ];
+        { name: "Jagannaickpur", distance: 5 },
+        { name: "Kacheripeta", distance: 5 },
+        { name: "Vakalapudi", distance: 8 },
+        { name: "Turangi", distance: 7 },
+        { name: "Thimmapuram", distance: 10 },
+        { name: "Rayudupalem", distance: 8 },
+        { name: "Kovvada", distance: 9 },
+        { name: "Balaji Cheruvu", distance: 2 },
+        { name: "Beach Road", distance: 6 },
+        { name: "Dummulapeta", distance: 7 },
+        { name: "Nagamallithota", distance: 4 },
+        { name: "JNTUK Area", distance: 0 }
+    ].sort((a, b) => a.name.localeCompare(b.name));
 
     const calculateDeliveryCharge = (dist) => {
         if (dist <= 5) return 25;
-        return 25 + (dist - 5) * 7;
+        return 25 + Math.max(0, (dist - 5) * 7);
     };
 
     const handleAreaChange = (e) => {
@@ -190,7 +208,7 @@ export default function Checkout() {
                                     <span className="text-gray-900">₹{cartTotal.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-base font-medium">
-                                    <span className="text-gray-900">Delivery Fee ({orderData.distance}km)</span>
+                                    <span className="text-gray-900">Delivery Fee</span>
                                     <span className="text-gray-900">₹{orderData.deliveryFee.toFixed(2)}</span>
                                 </div>
                                 <div className="flex justify-between text-lg font-bold">
@@ -293,7 +311,7 @@ export default function Checkout() {
                             </div>
 
                             <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Delivery Area (from JNTUK Center)</label>
+                                <label className="block text-sm font-medium text-gray-700">Delivery Area</label>
                                 <select
                                     required
                                     value={formData.area}
@@ -303,7 +321,7 @@ export default function Checkout() {
                                     <option value="">Select your area...</option>
                                     {AREAS.map(area => (
                                         <option key={area.name} value={area.name}>
-                                            {area.name} ({area.distance} km)
+                                            {area.name}
                                         </option>
                                     ))}
                                 </select>
