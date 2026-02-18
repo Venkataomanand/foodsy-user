@@ -15,6 +15,7 @@ import Cart from './pages/Cart';
 import Checkout from './pages/Checkout';
 import Orders from './pages/Orders';
 import ShortVideos from './pages/ShortVideos';
+import Admin from './pages/Admin';
 
 function App() {
   const [isStoreOpen, setIsStoreOpen] = useState(true);
@@ -34,7 +35,7 @@ function App() {
         <ProductProvider>
           <CartProvider>
             <div className="flex flex-col min-h-screen relative">
-              {!isStoreOpen && (
+              {!isStoreOpen && !window.location.pathname.includes('/admin') && (
                 <div className="fixed inset-0 z-[9999] bg-white flex flex-col items-center justify-center p-6 text-center overflow-hidden">
                   {/* Floating Emojis Background */}
                   <div className="absolute inset-0 opacity-10 pointer-events-none select-none overflow-hidden">
@@ -87,6 +88,7 @@ function App() {
                   <Route path="/checkout" element={<Checkout />} />
                   <Route path="/orders" element={<Orders />} />
                   <Route path="/short-videos" element={<ShortVideos />} />
+                  <Route path="/admin" element={<Admin />} />
                 </Routes>
               </main>
               <Footer />
