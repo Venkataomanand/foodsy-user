@@ -42,6 +42,9 @@ export default function Navbar() {
                             <Link to="/products" className="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                 Menu
                             </Link>
+                            <Link to="/short-videos" className="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
+                                Shorts
+                            </Link>
                             <Link to="/orders" className="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                 Orders
                             </Link>
@@ -115,6 +118,9 @@ export default function Navbar() {
                         </Link>
                         <Link to="/products" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
                             Menu
+                        </Link>
+                        <Link to="/short-videos" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
+                            Shorts
                         </Link>
                         <Link to="/orders" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
                             Orders
