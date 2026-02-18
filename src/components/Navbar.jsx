@@ -48,14 +48,6 @@ export default function Navbar() {
                             <Link to="/orders" className="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                 Orders
                             </Link>
-                            <a
-                                href="http://localhost:5175"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="text-white/70 hover:text-white px-3 py-2 rounded-md text-xs font-medium border border-white/20 ml-4"
-                            >
-                                Admin Panel
-                            </a>
                         </div>
                     </div>
 
