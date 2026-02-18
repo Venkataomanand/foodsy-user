@@ -87,6 +87,12 @@ export default function Checkout() {
         e.preventDefault();
         setLoading(true);
 
+        if (formData.phone.length !== 10) {
+            alert("Please enter a valid 10-digit phone number");
+            setLoading(false);
+            return;
+        }
+
         const email = currentUser?.email || 'guest@example.com';
         const newOrderId = generateOrderId(formData.firstName);
         const finalTotal = cartTotal + deliveryCharge;
@@ -347,9 +353,16 @@ export default function Checkout() {
                                     type="tel"
                                     required
                                     value={formData.phone}
-                                    onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                                    onChange={(e) => {
+                                        const value = e.target.value.replace(/\D/g, '');
+                                        if (value.length <= 10) {
+                                            setFormData({ ...formData, phone: value });
+                                        }
+                                    }}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                                     placeholder="e.g. 9876543210"
+                                    pattern="[0-9]{10}"
+                                    title="10-digit phone number required"
                                 />
                             </div>
                         </div>
