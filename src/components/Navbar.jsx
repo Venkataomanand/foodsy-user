@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { ShoppingBag, Menu, X, User, LogOut } from 'lucide-react';
+import { ShoppingBag, Menu, X, User, LogOut, Play } from 'lucide-react';
 import { motion } from 'framer-motion';
 import logo from '../assets/logo.jpg';
 
@@ -29,6 +29,9 @@ export default function Navbar() {
                         <Link to="/" className="flex-shrink-0 flex items-center bg-white/90 p-1.5 rounded-lg shadow-sm hover:bg-white transition-colors">
                             <img src={logo} alt="Foodsy" className="h-10 w-auto" />
                         </Link>
+                        <Link to="/short-videos" className="ml-2 p-2 bg-white/20 rounded-full text-white hover:bg-white/30 transition-colors" title="Watch Shorts">
+                            <Play className="h-5 w-5 fill-current" />
+                        </Link>
                         <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
                             <button
                                 onClick={() => window.open(`https://wa.me/918143938358?text=${encodeURIComponent('hai foodsy! I need some help with my order.')}`, '_blank')}
@@ -41,9 +44,6 @@ export default function Navbar() {
                             </Link>
                             <Link to="/products" className="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                 Menu
-                            </Link>
-                            <Link to="/short-videos" className="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
-                                Shorts
                             </Link>
                             <Link to="/orders" className="text-white/90 hover:text-white px-3 py-2 rounded-md text-sm font-medium">
                                 Orders
@@ -119,8 +119,8 @@ export default function Navbar() {
                         <Link to="/products" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
                             Menu
                         </Link>
-                        <Link to="/short-videos" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
-                            Shorts
+                        <Link to="/short-videos" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium flex items-center">
+                            <Play className="h-4 w-4 mr-2" /> Video Shorts
                         </Link>
                         <Link to="/orders" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
                             Orders
