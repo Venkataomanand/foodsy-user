@@ -24,11 +24,11 @@ export default function Checkout() {
     const [deliveryCharge, setDeliveryCharge] = useState(0);
 
     const AREAS = [
-        { name: "Sarpavaram", distance: 5 },
-        { name: "Ramanayapeta", distance: 4 },
-        { name: "Gandhi Nagar", distance: 3 },
-        { name: "Ashok Nagar", distance: 4 },
-        { name: "Vidya Nagar", distance: 4 },
+        { name: "Sarpavaram", distance: 3 },
+        { name: "Ramanayapeta", distance: 2 },
+        { name: "Gandhi Nagar", distance: 2 },
+        { name: "Ashok Nagar", distance: 3 },
+        { name: "Vidya Nagar", distance: 3 },
         { name: "Bank Colony", distance: 3 },
         { name: "Revenue Colony", distance: 3 },
         { name: "Teachers' Colony", distance: 3 },
@@ -37,25 +37,27 @@ export default function Checkout() {
         { name: "Lalitha Nagar", distance: 4 },
         { name: "Madura Nagar", distance: 4 },
         { name: "Santhi Nagar", distance: 4 },
-        { name: "Rama Rao Peta", distance: 3 },
-        { name: "Bhanugudi Junction", distance: 2 },
+        { name: "Rama Rao Peta", distance: 2 },
+        { name: "Bhanugudi Junction", distance: 1 },
         { name: "Jagannaickpur", distance: 5 },
         { name: "Kacheripeta", distance: 5 },
-        { name: "Vakalapudi", distance: 8 },
-        { name: "Turangi", distance: 7 },
-        { name: "Thimmapuram", distance: 10 },
-        { name: "Rayudupalem", distance: 8 },
-        { name: "Kovvada", distance: 9 },
+        { name: "Vakalapudi", distance: 6 },
+        { name: "Turangi", distance: 5 },
+        { name: "Thimmapuram", distance: 8 },
+        { name: "Rayudupalem", distance: 7 },
+        { name: "Kovvada", distance: 8 },
         { name: "Balaji Cheruvu", distance: 2 },
-        { name: "Beach Road", distance: 6 },
-        { name: "Dummulapeta", distance: 7 },
-        { name: "Nagamallithota", distance: 4 },
+        { name: "Beach Road", distance: 5 },
+        { name: "Dummulapeta", distance: 6 },
+        { name: "Nagamallithota", distance: 1 },
         { name: "JNTUK Area", distance: 0 }
     ].sort((a, b) => a.name.localeCompare(b.name));
 
     const calculateDeliveryCharge = (dist) => {
         if (dist <= 5) return 25;
-        return 25 + Math.max(0, (dist - 5) * 7);
+        // Corrected logic: 25 base + 7 for every km AFTER 5
+        const extraKm = dist - 5;
+        return 25 + (extraKm * 7);
     };
 
     const handleAreaChange = (e) => {
