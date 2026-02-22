@@ -16,7 +16,7 @@ import {
     setDoc,
     onSnapshot
 } from 'firebase/firestore';
-import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const MOCK_DATA = [
     { name: "Chicken Biryani", category: "Biryanis", price: 150, description: "Legendary Hyderabadi style biryani with perfectly cooked chicken.", emoji: "🍛", rating: 4.9 },
@@ -244,35 +244,42 @@ export default function Admin() {
 
     const uploadImage = async () => {
         if (!imageFile) return product.image;
-        return new Promise((resolve, reject) => {
-            try {
-                const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
-                const uploadTask = uploadBytesResumable(storageRef, imageFile);
-                uploadTask.on(
-                    'state_changed',
-                    (snapshot) => {
-                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
-                        setUploadProgress(progress);
-                    },
-                    (error) => {
-                        console.error("Storage Error:", error);
-                        reject(error);
-                    },
-                    async () => {
-                        try {
-                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
-                            resolve(downloadURL);
-                        } catch (err) {
-                            console.error("GetDownloadURL Error:", err);
-                            reject(err);
-                        }
-                    }
-                );
-            } catch (error) {
-                console.error("Upload initialization error:", error);
-                reject(error);
+
+        // 1. Check file size (max 5MB)
+        if (imageFile.size > 5 * 1024 * 1024) {
+            throw new Error("Image is too large (max 5MB). Please use a smaller image.");
+        }
+
+        console.log("📸 Starting upload for:", imageFile.name, `${(imageFile.size / 1024).toFixed(2)} KB`);
+
+        try {
+            const fileName = `products/${Date.now()}_${imageFile.name.replace(/\s+/g, '_')}`;
+            const storageRef = ref(storage, fileName);
+
+            console.log("📍 Storage Ref Path:", storageRef.fullPath);
+
+            // Use simple uploadBytes for better reliability
+            const snapshot = await uploadBytes(storageRef, imageFile);
+            console.log("✅ Upload successful, getting URL...");
+
+            const url = await getDownloadURL(snapshot.ref);
+            return url;
+        } catch (error) {
+            console.error("⛔ Firebase Storage Error Details:", {
+                code: error.code,
+                message: error.message,
+                name: error.name,
+                bucket: storage?.app?.options?.storageBucket
+            });
+
+            if (error.code === 'storage/unauthorized') {
+                throw new Error("Firebase Storage Rules: You don't have permission to upload photos. Please check your Firebase Storage Rules.");
+            } else if (error.code === 'storage/retry-limit-exceeded') {
+                throw new Error("Upload timed out. Please check your internet connection.");
             }
-        });
+
+            throw error;
+        }
     };
 
     const handleSubmit = async (e) => {
