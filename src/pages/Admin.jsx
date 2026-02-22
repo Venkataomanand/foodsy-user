@@ -277,62 +277,71 @@ export default function Admin() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log("Starting product submission...");
+        console.log("🚀 SUBMISSION START", { isEditing, editId, product });
 
         if (!currentUser) {
-            console.error("No user logged in");
-            alert("Please log in to save products.");
+            alert("⚠️ Please log in to manage products.");
             return;
         }
 
         if (!product.name || !product.price) {
-            alert("Name and Price are required!");
+            alert("⚠️ Please provide at least a name and price.");
             return;
         }
 
         setUploading(true);
+
         try {
-            console.log("Uploading image if present...");
+            // 1. Image Upload with Timeout
             let imageUrl = product.image;
             if (imageFile) {
-                imageUrl = await uploadImage();
-                console.log("Image uploaded:", imageUrl);
+                console.log("📸 Uploading image...");
+                const uploadPromise = uploadImage();
+                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Image upload timed out (15s)")), 15000));
+                imageUrl = await Promise.race([uploadPromise, timeoutPromise]);
+                console.log("✅ Image URL:", imageUrl);
             }
 
-            const productData = {
-                ...product,
-                price: Number(product.price) || 0,
-                image: imageUrl,
+            // 2. Prepare Clean Data Object
+            const finalProductData = {
+                name: String(product.name).trim(),
+                price: parseFloat(product.price) || 0,
+                category: String(product.category),
+                description: String(product.description || "").trim(),
+                emoji: String(product.emoji || "🥑"),
+                image: imageUrl || "",
+                unit: String(product.unit || "").trim(),
                 available: product.available !== undefined ? product.available : true,
                 updatedAt: serverTimestamp()
             };
 
-            // Remove id from productData
-            delete productData.id;
+            console.log("💾 Saving to Firestore:", finalProductData);
 
-            if (isEditing) {
-                console.log("Updating product:", editId, productData);
-                if (!editId) throw new Error("Edit ID is missing");
-                await updateProduct(editId, productData);
-                alert('Product Updated Successfully!');
-            } else {
-                console.log("Adding new product:", productData);
-                const newData = { ...productData, createdAt: serverTimestamp() };
-                await addProduct(newData);
-                alert('Product Added Successfully!');
-            }
+            // 3. Database Operation with Timeout
+            const dbOperation = isEditing
+                ? updateDoc(firestoreDoc(db, 'products', editId), finalProductData)
+                : addDoc(collection(db, 'products'), { ...finalProductData, createdAt: serverTimestamp() });
 
-            console.log("Submission complete, resetting form...");
+            const dbTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Database operation timed out (15s)")), 15000));
+
+            await Promise.race([dbOperation, dbTimeout]);
+
+            console.log("✨ SUCCESS!");
+            alert(`Item ${isEditing ? 'Updated' : 'Added'} Successfully!`);
+
+            // 4. Reset Form
             setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', image: '', unit: '' });
             setImageFile(null);
             setUploadProgress(0);
             setIsEditing(false);
             setEditId(null);
+
         } catch (error) {
-            console.error("Submission Error:", error);
-            alert(`Error saving product: ${error.message || 'Unknown error'}. Check console for details.`);
+            console.error("❌ Submission Failed:", error);
+            alert(`ERROR: ${error.message || 'Unknown error occurred'}`);
         } finally {
             setUploading(false);
+            setUploadProgress(0);
         }
     };
 
