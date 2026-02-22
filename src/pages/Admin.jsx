@@ -346,6 +346,7 @@ export default function Admin() {
                                             <option value="Biryanis">Biryanis</option>
                                             <option value="Pulavs">Pulavs</option>
                                             <option value="Desserts">Desserts</option>
+                                            <option value="Milkshakes">Milkshakes</option>
                                             <option value="Beverages">Beverages</option>
                                         </optgroup>
                                         <optgroup label="Vegetables">

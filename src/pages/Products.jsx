@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 const ALL_CATEGORIES = [
     'All',
-    'Biryanis', 'Pulavs', 'Desserts', 'Beverages',
+    'Biryanis', 'Pulavs', 'Desserts', 'Milkshakes', 'Beverages',
     'Fruits', 'Green Leafy Vegetables', 'Vegetables',
     'Rice & Dals', 'Oils & Spices', 'Snacks & Drinks', 'Essentials',
     'Combos'

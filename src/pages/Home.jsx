@@ -7,18 +7,44 @@ import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 
-const CATEGORIES = [
-    { name: 'Biryanis', icon: '🍛', color: 'bg-orange-50', link: '/products?category=biryanis' },
-    { name: 'Pulavs', icon: '🥘', color: 'bg-yellow-50', link: '/products?category=pulavs' },
-    { name: 'Fruits', icon: '🍎', color: 'bg-red-50', link: '/products?category=fruits' },
-    { name: 'Leafy Veg', icon: '🥬', color: 'bg-emerald-50', link: '/products?category=green leafy vegetables' },
-    { name: 'Vegetables', icon: '🥦', color: 'bg-green-50', link: '/products?category=vegetables' },
-    { name: 'Rice & Dals', icon: '🌾', color: 'bg-amber-50', link: '/products?category=rice & dals' },
-    { name: 'Oils & Spices', icon: '🍯', color: 'bg-yellow-100', link: '/products?category=oils & spices' },
-    { name: 'Snacks', icon: '🍟', color: 'bg-orange-100', link: '/products?category=snacks & drinks' },
-    { name: 'Desserts', icon: '🍰', color: 'bg-pink-50', link: '/products?category=desserts' },
-    { name: 'Beverages', icon: '🥤', color: 'bg-cyan-50', link: '/products?category=beverages' },
-    { name: 'Combos', icon: '🎁', color: 'bg-indigo-50', link: '/products?category=combos' },
+const CATEGORY_GROUPS = [
+    {
+        title: "Delicious Food",
+        subtitle: "Biryanis, Pulavs, Desserts & more",
+        items: [
+            { name: 'Biryanis', icon: '🍛', color: 'bg-orange-50', link: '/products?category=biryanis' },
+            { name: 'Pulavs', icon: '🥘', color: 'bg-yellow-50', link: '/products?category=pulavs' },
+            { name: 'Desserts', icon: '🍰', color: 'bg-pink-50', link: '/products?category=desserts' },
+            { name: 'Milkshakes', icon: '🥤', color: 'bg-purple-50', link: '/products?category=milkshakes' },
+            { name: 'Beverages', icon: '🍹', color: 'bg-cyan-50', link: '/products?category=beverages' },
+        ]
+    },
+    {
+        title: "Fresh Vegetables",
+        subtitle: "Farm fresh fruits and greens",
+        items: [
+            { name: 'Fruits', icon: '🍎', color: 'bg-red-50', link: '/products?category=fruits' },
+            { name: 'Leafy Veg', icon: '🥬', color: 'bg-emerald-50', link: '/products?category=green leafy vegetables' },
+            { name: 'Vegetables', icon: '🥦', color: 'bg-green-50', link: '/products?category=vegetables' },
+        ]
+    },
+    {
+        title: "Daily Grocery",
+        subtitle: "Essentials delivered to your door",
+        items: [
+            { name: 'Rice & Dals', icon: '🌾', color: 'bg-amber-50', link: '/products?category=rice & dals' },
+            { name: 'Oils & Spices', icon: '🍯', color: 'bg-yellow-100', link: '/products?category=oils & spices' },
+            { name: 'Snacks', icon: '🍟', color: 'bg-orange-100', link: '/products?category=snacks & drinks' },
+            { name: 'Essentials', icon: '🥚', color: 'bg-blue-50', link: '/products?category=essentials' },
+        ]
+    },
+    {
+        title: "Special Deals",
+        subtitle: "Save more with our combos",
+        items: [
+            { name: 'Combos', icon: '🎁', color: 'bg-indigo-50', link: '/products?category=combos' },
+        ]
+    }
 ];
 
 export default function Home() {
@@ -29,7 +55,6 @@ export default function Home() {
         if (!list) return;
 
         try {
-            // 1. Save to Firestore
             await addDoc(collection(db, 'orders'), {
                 email: currentUser?.email || 'guest@example.com',
                 isCustom: true,
@@ -40,10 +65,7 @@ export default function Home() {
                 createdAt: serverTimestamp()
             });
 
-            // 2. Alert user
             alert("List submitted successfully! Redirecting to WhatsApp for confirmation...");
-
-            // 3. Open WhatsApp
             const message = `hai foodsy! I have submitted this list on the website: ${list}`;
             window.open(`https://wa.me/918143938358?text=${encodeURIComponent(message)}`, '_blank');
         } catch (error) {
@@ -55,27 +77,34 @@ export default function Home() {
     };
 
     return (
-        <div className="space-y-12 pb-20">
+        <div className="space-y-16 pb-20">
             <Hero />
 
-            {/* "What's on your mind?" - Swiggy Style */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-8">What's on your mind?</h2>
-                <div className="flex overflow-x-auto pb-6 scrollbar-hide space-x-6 md:grid md:grid-cols-6 md:space-x-0 md:gap-8">
-                    {CATEGORIES.map((cat) => (
-                        <Link
-                            key={cat.name}
-                            to={cat.link}
-                            className="flex-shrink-0 flex flex-col items-center group transition-transform hover:scale-110"
-                        >
-                            <div className={`w-20 h-20 md:w-28 md:h-28 ${cat.color} rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-sm group-hover:shadow-lg transition-all duration-300 ring-2 ring-transparent group-hover:ring-primary/20`}>
-                                {cat.icon}
-                            </div>
-                            <span className="mt-4 text-sm md:text-base font-bold text-gray-700 group-hover:text-primary transition-colors">{cat.name}</span>
-                        </Link>
-                    ))}
-                </div>
-            </section>
+            {/* Categorized Sections */}
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
+                {CATEGORY_GROUPS.map((group) => (
+                    <section key={group.title}>
+                        <div className="mb-8">
+                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">{group.title}</h2>
+                            <p className="text-gray-500 font-medium">{group.subtitle}</p>
+                        </div>
+                        <div className="flex overflow-x-auto pb-6 scrollbar-hide space-x-6 md:grid md:grid-cols-5 lg:grid-cols-6 md:space-x-0 md:gap-8">
+                            {group.items.map((cat) => (
+                                <Link
+                                    key={cat.name}
+                                    to={cat.link}
+                                    className="flex-shrink-0 flex flex-col items-center group transition-transform hover:scale-110"
+                                >
+                                    <div className={`w-20 h-20 md:w-28 md:h-28 ${cat.color} rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-sm group-hover:shadow-lg transition-all duration-300 ring-2 ring-transparent group-hover:ring-primary/20`}>
+                                        {cat.icon}
+                                    </div>
+                                    <span className="mt-4 text-sm md:text-base font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
+                                </Link>
+                            ))}
+                        </div>
+                    </section>
+                ))}
+            </div>
 
             {/* Custom List Banner - WhatsApp Feature */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
