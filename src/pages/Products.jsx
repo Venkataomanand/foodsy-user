@@ -7,13 +7,23 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
-const ALL_CATEGORIES = [
-    'All',
-    'Biryanis', 'Pulavs', 'Desserts', 'Milkshakes', 'Beverages',
-    'Fruits', 'Green Leafy Vegetables', 'Vegetables',
-    'Rice & Dals', 'Oils & Spices', 'Snacks & Drinks', 'Essentials',
-    'Combos'
-];
+import { motion } from 'framer-motion';
+const CATEGORY_STRUCTURE = {
+    'Food': ['Biryanis', 'Pulavs', 'Desserts', 'Milkshakes', 'Beverages'],
+    'Vegetables': ['Fruits', 'Green Leafy Vegetables', 'Vegetables'],
+    'Grocery': ['Rice & Dals', 'Oils & Spices', 'Snacks & Drinks', 'Essentials'],
+    'Combos': []
+};
+
+const MAIN_CATEGORIES = ['All', 'Food', 'Vegetables', 'Grocery', 'Combos'];
+
+// Helper to determine parent category
+const getParentCategory = (subCat) => {
+    for (const [parent, subs] of Object.entries(CATEGORY_STRUCTURE)) {
+        if (subs.includes(subCat) || parent === subCat) return parent;
+    }
+    return 'All';
+};
 
 export default function Products() {
     const { products, loading } = useProduct();
@@ -22,21 +32,40 @@ export default function Products() {
     const [searchParams, setSearchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
     const searchQuery = searchParams.get('search') || '';
-    const [activeCategory, setActiveCategory] = useState(categoryFilter || 'All');
+
+    // States for hierarchical filtering
+    const [activeMainCategory, setActiveMainCategory] = useState('All');
+    const [activeSubCategory, setActiveSubCategory] = useState(null);
 
     useEffect(() => {
         if (categoryFilter) {
-            const standardized = categoryFilter.toLowerCase();
-            // Map legacy categories or specific groupings if needed
-            if (['food'].includes(standardized)) {
-                setActiveCategory('Biryanis'); // Default to Biryanis if food is requested
+            const raw = categoryFilter.toLowerCase();
+            // Find which subcategory this actually matches (case insensitive)
+            let foundSub = null;
+            let foundMain = null;
+
+            // Check if it's a main category
+            const matchMain = MAIN_CATEGORIES.find(m => m.toLowerCase() === raw);
+            if (matchMain && matchMain !== 'All') {
+                foundMain = matchMain;
+                foundSub = null;
             } else {
-                // Find matching category in our new list (case-insensitive)
-                const match = ALL_CATEGORIES.find(c => c.toLowerCase() === standardized);
-                setActiveCategory(match || 'All');
+                // Check if it's a sub category
+                for (const [main, subs] of Object.entries(CATEGORY_STRUCTURE)) {
+                    const matchSub = subs.find(s => s.toLowerCase() === raw);
+                    if (matchSub) {
+                        foundMain = main;
+                        foundSub = matchSub;
+                        break;
+                    }
+                }
             }
+
+            setActiveMainCategory(foundMain || 'All');
+            setActiveSubCategory(foundSub);
         } else if (!searchQuery) {
-            setActiveCategory('All');
+            setActiveMainCategory('All');
+            setActiveSubCategory(null);
         }
     }, [categoryFilter, searchQuery]);
 
@@ -49,22 +78,40 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
-        const productCat = (product.category || '').toLowerCase();
+        const productCat = product.category || '';
+        const parentCat = getParentCategory(productCat);
+
         const productName = (product.name || '').toLowerCase();
         const productDesc = (product.description || '').toLowerCase();
-        const activeCatLower = activeCategory.toLowerCase();
 
-        // Legacy compatibility: map 'Food' products to 'Biryanis' or handle them
-        let standardizedProductCat = productCat;
-        if (productCat === 'food') standardizedProductCat = 'biryanis';
+        // 1. Filter by Main Category
+        if (activeMainCategory !== 'All' && parentCat !== activeMainCategory) return false;
 
-        let matchesCategory = activeCategory === 'All' || standardizedProductCat === activeCatLower;
+        // 2. Filter by Sub Category (if one is selected)
+        if (activeSubCategory && productCat !== activeSubCategory) return false;
 
+        // 3. Filter by Search Query
         const matchesSearch = productName.includes(searchQuery.toLowerCase()) ||
             productDesc.includes(searchQuery.toLowerCase());
 
-        return matchesCategory && matchesSearch;
+        return matchesSearch;
     });
+
+    const handleMainCategoryClick = (cat) => {
+        setActiveMainCategory(cat);
+        setActiveSubCategory(null);
+        searchParams.delete('search');
+        if (cat === 'All') searchParams.delete('category');
+        else searchParams.set('category', cat.toLowerCase());
+        setSearchParams(searchParams);
+    };
+
+    const handleSubCategoryClick = (sub) => {
+        setActiveSubCategory(sub);
+        searchParams.delete('search');
+        searchParams.set('category', sub.toLowerCase());
+        setSearchParams(searchParams);
+    };
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -72,44 +119,64 @@ export default function Products() {
             <div className="flex flex-col space-y-6 mb-8">
                 <div className="flex flex-col md:flex-row justify-between items-center">
                     <div>
-                        <h1 className="text-3xl font-extrabold text-primary">Our Menu</h1>
+                        <h1 className="text-3xl font-extrabold text-primary decoration-primary underline-offset-8">Our Menu</h1>
                         {searchQuery && (
                             <p className="text-gray-500 mt-1">
                                 Results for "<span className="font-semibold text-gray-900">{searchQuery}</span>"
-                                <button
-                                    onClick={() => {
-                                        searchParams.delete('search');
-                                        setSearchParams(searchParams);
-                                    }}
-                                    className="ml-2 text-sm text-red-500 hover:underline"
-                                >
-                                    Clear
-                                </button>
+                                <button onClick={() => { searchParams.delete('search'); setSearchParams(searchParams); }} className="ml-2 text-sm text-red-500 hover:underline">Clear</button>
                             </p>
                         )}
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
-                    <Filter className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0" />
-                    {ALL_CATEGORIES.map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => {
-                                setActiveCategory(cat);
-                                searchParams.delete('search');
-                                if (cat === 'All') searchParams.delete('category');
-                                else searchParams.set('category', cat.toLowerCase());
-                                setSearchParams(searchParams);
-                            }}
-                            className={`px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeCategory === cat
-                                ? 'bg-primary text-white shadow-lg scale-105'
-                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
-                                }`}
+                {/* Main Category Row */}
+                <div className="space-y-4">
+                    <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                        <Filter className="h-5 w-5 text-gray-400 mr-2 flex-shrink-0" />
+                        {MAIN_CATEGORIES.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => handleMainCategoryClick(cat)}
+                                className={`px-6 py-2.5 rounded-2xl text-sm font-black transition-all whitespace-nowrap shadow-sm ${activeMainCategory === cat
+                                    ? 'bg-primary text-white shadow-primary/25 scale-105'
+                                    : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100 hover:border-primary/20'
+                                    }`}
+                            >
+                                {cat}
+                            </button>
+                        ))}
+                    </div>
+
+                    {/* Sub Category Row (Only shown if a main category with subs is active) */}
+                    {activeMainCategory !== 'All' && CATEGORY_STRUCTURE[activeMainCategory]?.length > 0 && (
+                        <motion.div
+                            initial={{ opacity: 0, y: -10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide bg-gray-50/50 p-2 rounded-2xl border border-gray-100/50"
                         >
-                            {cat}
-                        </button>
-                    ))}
+                            <button
+                                onClick={() => handleSubCategoryClick(null)}
+                                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${!activeSubCategory
+                                    ? 'bg-gray-900 text-white'
+                                    : 'bg-white text-gray-400 hover:text-gray-900'
+                                    }`}
+                            >
+                                All {activeMainCategory}
+                            </button>
+                            {CATEGORY_STRUCTURE[activeMainCategory].map(sub => (
+                                <button
+                                    key={sub}
+                                    onClick={() => handleSubCategoryClick(sub)}
+                                    className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${activeSubCategory === sub
+                                        ? 'bg-primary text-white'
+                                        : 'bg-white text-gray-400 hover:text-gray-900 hover:bg-white'
+                                        }`}
+                                >
+                                    {sub}
+                                </button>
+                            ))}
+                        </motion.div>
+                    )}
                 </div>
             </div>
 

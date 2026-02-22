@@ -77,34 +77,62 @@ export default function Home() {
     };
 
     return (
-        <div className="space-y-16 pb-20">
+        <div className="space-y-12 pb-20">
             <Hero />
 
-            {/* Categorized Sections */}
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 space-y-16">
-                {CATEGORY_GROUPS.map((group) => (
-                    <section key={group.title}>
-                        <div className="mb-8">
-                            <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">{group.title}</h2>
-                            <p className="text-gray-500 font-medium">{group.subtitle}</p>
-                        </div>
-                        <div className="flex overflow-x-auto pb-6 scrollbar-hide space-x-6 md:grid md:grid-cols-5 lg:grid-cols-6 md:space-x-0 md:gap-8">
-                            {group.items.map((cat) => (
-                                <Link
-                                    key={cat.name}
-                                    to={cat.link}
-                                    className="flex-shrink-0 flex flex-col items-center group transition-transform hover:scale-110"
-                                >
-                                    <div className={`w-20 h-20 md:w-28 md:h-28 ${cat.color} rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-sm group-hover:shadow-lg transition-all duration-300 ring-2 ring-transparent group-hover:ring-primary/20`}>
-                                        {cat.icon}
-                                    </div>
-                                    <span className="mt-4 text-sm md:text-base font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
-                                </Link>
-                            ))}
-                        </div>
-                    </section>
-                ))}
-            </div>
+            {/* Food Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Food Menu</h2>
+                    <Link to="/products?category=food" className="text-primary font-bold text-sm hover:underline italic">View All Food</Link>
+                </div>
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
+                    {CATEGORY_GROUPS[0].items.map((cat) => (
+                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
+                                {cat.icon}
+                            </div>
+                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+
+            {/* Vegetables Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Fresh Vegetables</h2>
+                    <Link to="/products?category=vegetables" className="text-primary font-bold text-sm hover:underline italic">View All Veggies</Link>
+                </div>
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
+                    {CATEGORY_GROUPS[1].items.map((cat) => (
+                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
+                                {cat.icon}
+                            </div>
+                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+
+            {/* Grocery Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Daily Grocery</h2>
+                    <Link to="/products?category=grocery" className="text-primary font-bold text-sm hover:underline italic">View All Grocery</Link>
+                </div>
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
+                    {CATEGORY_GROUPS[2].items.map((cat) => (
+                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
+                                {cat.icon}
+                            </div>
+                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
 
             {/* Custom List Banner - WhatsApp Feature */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
