@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProduct } from '../context/ProductContext';
+import { useAuth } from '../context/AuthContext';
 import { Pencil, Trash2, Plus, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag } from 'lucide-react';
 import { db, storage } from '../firebase';
 import {
@@ -30,6 +31,7 @@ const MOCK_DATA = [
 
 export default function Admin() {
     const { products, addProduct, updateProduct, deleteProduct, loading } = useProduct();
+    const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState('products');
     const [orders, setOrders] = useState([]);
     const [loadingOrders, setLoadingOrders] = useState(false);
@@ -275,6 +277,10 @@ export default function Admin() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!currentUser) {
+            alert("Please log in to save products.");
+            return;
+        }
         setUploading(true);
         try {
             let imageUrl = product.image;
@@ -298,7 +304,7 @@ export default function Admin() {
             setEditId(null);
         } catch (error) {
             console.error(error);
-            alert('Error saving product');
+            alert(`Error saving product: ${error.message || 'Unknown error'}`);
         } finally {
             setUploading(false);
         }
@@ -373,8 +379,8 @@ export default function Admin() {
             </div>
 
             <div className="flex overflow-x-auto space-x-4 mb-8 pb-2">
-                <button onClick={() => { setActiveTab('products'); setProduct({ ...product, category: 'Biryanis' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
-                <button onClick={() => { setActiveTab('combos'); setProduct({ ...product, category: 'Combos' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'combos' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><span className="mr-2">🎁</span> Combos</button>
+                <button onClick={() => { setActiveTab('products'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
+                <button onClick={() => { setActiveTab('combos'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Combos', description: '', emoji: '🎁', image: '', unit: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'combos' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><span className="mr-2">🎁</span> Combos</button>
                 <button onClick={() => setActiveTab('offers')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'offers' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Tag className="h-5 w-5 mr-2" /> Offers</button>
                 <button onClick={() => setActiveTab('orders')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'orders' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><ShoppingBag className="h-5 w-5 mr-2" /> Orders</button>
                 <button onClick={() => setActiveTab('shorts')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'shorts' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Play className="h-5 w-5 mr-2" /> Shorts</button>
