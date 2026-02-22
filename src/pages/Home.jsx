@@ -8,12 +8,17 @@ import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 
 const CATEGORIES = [
-    { name: 'Biryani', icon: '🍚', color: 'bg-orange-100', link: '/products?category=food' },
-    { name: 'Burgers', icon: '🍔', color: 'bg-red-100', link: '/products?category=food' },
-    { name: 'Grocery', icon: '🛒', color: 'bg-green-100', link: '/products?category=grocery' },
-    { name: 'Veggies', icon: '🥦', color: 'bg-emerald-100', link: '/products?category=vegetables' },
-    { name: 'Combos', icon: '🎁', color: 'bg-yellow-100', link: '/products?category=combos' },
-    { name: 'Desserts', icon: '🍰', color: 'bg-pink-100', link: '/products?category=food' },
+    { name: 'Biryanis', icon: '🍛', color: 'bg-orange-50', link: '/products?category=biryanis' },
+    { name: 'Pulavs', icon: '🥘', color: 'bg-yellow-50', link: '/products?category=pulavs' },
+    { name: 'Fruits', icon: '🍎', color: 'bg-red-50', link: '/products?category=fruits' },
+    { name: 'Leafy Veg', icon: '🥬', color: 'bg-emerald-50', link: '/products?category=green leafy vegetables' },
+    { name: 'Vegetables', icon: '🥦', color: 'bg-green-50', link: '/products?category=vegetables' },
+    { name: 'Rice & Dals', icon: '🌾', color: 'bg-amber-50', link: '/products?category=rice & dals' },
+    { name: 'Oils & Spices', icon: '🍯', color: 'bg-yellow-100', link: '/products?category=oils & spices' },
+    { name: 'Snacks', icon: '🍟', color: 'bg-orange-100', link: '/products?category=snacks & drinks' },
+    { name: 'Desserts', icon: '🍰', color: 'bg-pink-50', link: '/products?category=desserts' },
+    { name: 'Beverages', icon: '🥤', color: 'bg-cyan-50', link: '/products?category=beverages' },
+    { name: 'Combos', icon: '🎁', color: 'bg-indigo-50', link: '/products?category=combos' },
 ];
 
 export default function Home() {

@@ -18,32 +18,14 @@ import {
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 
 const MOCK_DATA = [
-    { name: "Chicken Fried Rice", category: "Food", price: 100, description: "Classic fried rice tossed with tender chicken chunks and aromatic spices.", emoji: "🍚", rating: 4.8 },
-    { name: "Egg Fried Rice", category: "Food", price: 90, description: "Fragrant rice fried with scrambled eggs and fresh garden vegetables.", emoji: "🥚", rating: 4.5 },
-    { name: "Veg Fried Rice", category: "Food", price: 90, description: "Healthy and delicious rice stir-fried with seasonal veggies.", emoji: "🥦", rating: 4.3 },
-    { name: "Chicken Noodles", category: "Food", price: 100, description: "Wok-tossed noodles with succulent chicken and spicy seasoning.", emoji: "🍝", rating: 4.7 },
-    { name: "Egg Noodles", category: "Food", price: 90, description: "Soft noodles stir-fried with eggs and crunchy vegetables.", emoji: "🍜", rating: 4.4 },
-    { name: "Veg Noodles", category: "Food", price: 80, description: "Traditional street-style noodles with a mix of fresh vegetables.", emoji: "🥢", rating: 4.2 },
-    { name: "Chilli Chicken", category: "Food", price: 150, description: "Spicy and tangy chicken chunks sautèed with peppers and onions.", emoji: "🌶️", rating: 4.9 },
-    { name: "Chicken Manchuria", category: "Food", price: 150, description: "Deep-fried chicken balls tossed in a flavorful Manchurian sauce.", emoji: "🥘", rating: 4.6 },
-    { name: "Chicken Lollipops", category: "Food", price: 170, description: "Crispy and succulent chicken wings shaped like lollipops, a perfect starter.", emoji: "🍗", rating: 4.8 },
-    { name: "Paneer Fried Rice", category: "Food", price: 120, description: "Aromatic rice fried with soft paneer cubes and spices.", emoji: "🧀", rating: 4.5 },
-    { name: "Mushroom Fried Rice", category: "Food", price: 120, description: "Delicious fried rice featuring earthy mushrooms and delicate herbs.", emoji: "🍄", rating: 4.4 },
-    { name: "Paneer Noodles", category: "Food", price: 120, description: "Stir-fried noodles loaded with soft paneer and fresh veggies.", emoji: "🥣", rating: 4.6 },
-    { name: "Mushroom Noodles", category: "Food", price: 120, description: "Savory noodles tossed with fresh mushrooms and mild spices.", emoji: "🍝", rating: 4.3 },
-    { name: "Veg Manchuria", category: "Food", price: 100, description: "Crispy vegetable balls in a rich and tangy gravy.", emoji: "🥗", rating: 4.5 },
-    { name: "Chicken Biryani", category: "Food", price: 150, description: "Legendary Hyderabadi style biryani with perfectly cooked chicken.", emoji: "🍛", rating: 4.9 },
-    { name: "Chicken Joint", category: "Food", price: 120, description: "Juicy roasted chicken joint seasoned with local spices.", emoji: "🍗", rating: 4.7 },
-    { name: "Sweet Corn Fried Rice", category: "Food", price: 100, description: "Flavorful rice fried with golden sweet corn and veggies.", emoji: "🌽", rating: 4.4 },
-    { name: "Sweet Corn Noodles", category: "Food", price: 100, description: "Delicious stir-fried noodles with a sweet corn twist.", emoji: "🌽", rating: 4.2 },
-    { name: "Biryani + Beverage Combo", category: "Food", price: 249, description: "Authentic Dum Biryani served with a cool refreshing beverage.", emoji: "🍱", rating: 4.8 },
-    { name: "Biryani + Milkshake Combo", category: "Food", price: 299, description: "Delicious Biryani paired with our signature thick milkshake.", emoji: "🎁", rating: 4.9 },
-    { name: "Veg Manchow Soup", category: "Food", price: 80, description: "A spicy and tangy Indo-Chinese soup loaded with chopped veggies and crispy noodles.", emoji: "🥣", rating: 4.5 },
-    { name: "Veg Hot & Sour Soup", category: "Food", price: 80, description: "Classic spicy and sour soup with a variety of oriental vegetables.", emoji: "🍜", rating: 4.4 },
-    { name: "Sweet Corn Veg Soup", category: "Food", price: 80, description: "Comforting creamy soup made with golden sweet corn and fresh vegetables.", emoji: "🌽", rating: 4.6 },
-    { name: "Chicken Manchow Soup", category: "Food", price: 105, description: "Flavorful chicken soup with spicy accents and topped with crunchy noodles.", emoji: "🍲", rating: 4.8 },
-    { name: "Chicken Hot & Sour Soup", category: "Food", price: 105, description: "Zesty and spicy chicken soup with a perfect tang of vinegar and spices.", emoji: "🍝", rating: 4.7 },
-    { name: "Chicken Sweet Corn Soup", category: "Food", price: 105, description: "Creamy and delicious soup with tender chicken and golden sweet corn.", emoji: "🌽", rating: 4.6 },
+    { name: "Chicken Biryani", category: "Biryanis", price: 150, description: "Legendary Hyderabadi style biryani with perfectly cooked chicken.", emoji: "🍛", rating: 4.9 },
+    { name: "Family Pulav", category: "Pulavs", price: 350, description: "Deluxe pulav served with raita and spicy curry.", emoji: "🥘", rating: 4.8 },
+    { name: "Fresh Apple", category: "Fruits", price: 120, description: "Crunchy and sweet Kashmiri apples.", emoji: "🍎", rating: 4.7 },
+    { name: "Spinach (Palak)", category: "Green Leafy Vegetables", price: 30, description: "Fresh farm-picked organic spinach.", emoji: "🥬", rating: 4.9 },
+    { name: "Carrot", category: "Vegetables", price: 40, description: "Fresh and sweet carrots.", emoji: "🥕", rating: 4.5 },
+    { name: "Basmati Rice 5kg", category: "Rice & Dals", price: 450, description: "Premium long grain basmati rice.", emoji: "🍚", rating: 4.8 },
+    { name: "Gulab Jamun", category: "Desserts", price: 80, description: "Soft and juicy milk-based sweets.", emoji: "🍬", rating: 4.9 },
+    { name: "Cool Drink", category: "Beverages", price: 40, description: "Chilled soft drink.", emoji: "🥤", rating: 4.4 },
 ];
 
 export default function Admin() {
@@ -59,7 +41,7 @@ export default function Admin() {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [product, setProduct] = useState({
-        name: '', price: '', category: 'Food', description: '', emoji: '🥑', image: ''
+        name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: ''
     });
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -262,7 +244,7 @@ export default function Admin() {
                 await addProduct(productData);
                 alert('Product Added!');
             }
-            setProduct({ name: '', price: '', category: 'Food', description: '', emoji: '🥑', image: '' });
+            setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '' });
             setImageFile(null);
             setUploadProgress(0);
             setIsEditing(false);
@@ -343,7 +325,7 @@ export default function Admin() {
             </div>
 
             <div className="flex overflow-x-auto space-x-4 mb-8 pb-2">
-                <button onClick={() => { setActiveTab('products'); setProduct({ ...product, category: 'Food' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
+                <button onClick={() => { setActiveTab('products'); setProduct({ ...product, category: 'Biryanis' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
                 <button onClick={() => { setActiveTab('combos'); setProduct({ ...product, category: 'Combos' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'combos' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><span className="mr-2">🎁</span> Combos</button>
                 <button onClick={() => setActiveTab('orders')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'orders' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><ShoppingBag className="h-5 w-5 mr-2" /> Orders</button>
                 <button onClick={() => setActiveTab('shorts')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'shorts' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Play className="h-5 w-5 mr-2" /> Shorts</button>
@@ -359,11 +341,29 @@ export default function Admin() {
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Image</label><input type="file" accept="image/*" onChange={handleImageChange} className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white" />{uploadProgress > 0 && <div className="mt-2 bg-gray-100 rounded-full h-1.5 overflow-hidden"><div className="bg-primary h-1.5 transition-all" style={{ width: `${uploadProgress}%` }}></div></div>}</div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Price (₹)</label><input type="number" required value={product.price} onChange={e => setProduct({ ...product, price: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" /></div>
-                                    <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Category</label>{activeTab === 'combos' ? <div className="bg-gray-100 p-4 rounded-2xl text-sm font-bold text-gray-400">Combos</div> : <select value={product.category} onChange={e => setProduct({ ...product, category: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"><option value="Food">Food</option><option value="Vegetables">Vegetables</option><option value="Grocery">Grocery</option></select>}</div>
+                                    <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Category</label>{activeTab === 'combos' ? <div className="bg-gray-100 p-4 rounded-2xl text-sm font-bold text-gray-400">Combos</div> : <select value={product.category} onChange={e => setProduct({ ...product, category: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20">
+                                        <optgroup label="Food">
+                                            <option value="Biryanis">Biryanis</option>
+                                            <option value="Pulavs">Pulavs</option>
+                                            <option value="Desserts">Desserts</option>
+                                            <option value="Beverages">Beverages</option>
+                                        </optgroup>
+                                        <optgroup label="Vegetables">
+                                            <option value="Fruits">Fruits</option>
+                                            <option value="Green Leafy Vegetables">Green Leafy Vegetables</option>
+                                            <option value="Vegetables">Vegetables</option>
+                                        </optgroup>
+                                        <optgroup label="Grocery">
+                                            <option value="Rice & Dals">Rice & Dals</option>
+                                            <option value="Oils & Spices">Oils & Spices</option>
+                                            <option value="Snacks & Drinks">Snacks & Drinks</option>
+                                            <option value="Essentials">Essentials</option>
+                                        </optgroup>
+                                    </select>}</div>
                                 </div>
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Emoji Icon</label><input type="text" value={product.emoji} onChange={e => setProduct({ ...product, emoji: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" /></div>
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Description</label><textarea rows={3} value={product.description} onChange={e => setProduct({ ...product, description: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-medium" placeholder="Tasty ingredients..." /></div>
-                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Food', description: '', emoji: '🥑' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
+                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
                             </form>
                         </div>
                     </div>

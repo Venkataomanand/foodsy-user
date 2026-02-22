@@ -7,7 +7,13 @@ import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
-
+const ALL_CATEGORIES = [
+    'All',
+    'Biryanis', 'Pulavs', 'Desserts', 'Beverages',
+    'Fruits', 'Green Leafy Vegetables', 'Vegetables',
+    'Rice & Dals', 'Oils & Spices', 'Snacks & Drinks', 'Essentials',
+    'Combos'
+];
 
 export default function Products() {
     const { products, loading } = useProduct();
@@ -20,12 +26,14 @@ export default function Products() {
 
     useEffect(() => {
         if (categoryFilter) {
-            const standardized = categoryFilter.charAt(0).toUpperCase() + categoryFilter.slice(1).toLowerCase();
-            // Map legacy categories to Food
-            if (['Soups', 'Maggies', 'Juices', 'Soft drinks', 'Combos'].includes(standardized)) {
-                setActiveCategory('Food');
+            const standardized = categoryFilter.toLowerCase();
+            // Map legacy categories or specific groupings if needed
+            if (['food'].includes(standardized)) {
+                setActiveCategory('Biryanis'); // Default to Biryanis if food is requested
             } else {
-                setActiveCategory(standardized);
+                // Find matching category in our new list (case-insensitive)
+                const match = ALL_CATEGORIES.find(c => c.toLowerCase() === standardized);
+                setActiveCategory(match || 'All');
             }
         } else if (!searchQuery) {
             setActiveCategory('All');
@@ -41,26 +49,22 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
-        const rawCat = (product.category || '').toLowerCase();
+        const productCat = (product.category || '').toLowerCase();
         const productName = (product.name || '').toLowerCase();
         const productDesc = (product.description || '').toLowerCase();
         const activeCatLower = activeCategory.toLowerCase();
 
-        // Standardize product category for filtering
-        let productCat = rawCat;
-        if (['soups', 'maggies', 'juices', 'soft drinks', 'combos', 'fastfood'].includes(rawCat)) {
-            productCat = 'food';
-        }
+        // Legacy compatibility: map 'Food' products to 'Biryanis' or handle them
+        let standardizedProductCat = productCat;
+        if (productCat === 'food') standardizedProductCat = 'biryanis';
 
-        let matchesCategory = activeCategory === 'All' || productCat === activeCatLower;
+        let matchesCategory = activeCategory === 'All' || standardizedProductCat === activeCatLower;
 
         const matchesSearch = productName.includes(searchQuery.toLowerCase()) ||
             productDesc.includes(searchQuery.toLowerCase());
 
         return matchesCategory && matchesSearch;
     });
-
-    const categories = ['All', 'Food', 'Vegetables', 'Grocery'];
 
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -86,21 +90,21 @@ export default function Products() {
                     </div>
                 </div>
 
-                <div className="flex items-center space-x-2 overflow-x-auto pb-2">
-                    <Filter className="h-5 w-5 text-gray-500 mr-2" />
-                    {categories.map(cat => (
+                <div className="flex items-center space-x-2 overflow-x-auto pb-2 scrollbar-hide">
+                    <Filter className="h-5 w-5 text-gray-500 mr-2 flex-shrink-0" />
+                    {ALL_CATEGORIES.map(cat => (
                         <button
                             key={cat}
                             onClick={() => {
                                 setActiveCategory(cat);
-                                searchParams.delete('search'); // Clear search when changing category
+                                searchParams.delete('search');
                                 if (cat === 'All') searchParams.delete('category');
                                 else searchParams.set('category', cat.toLowerCase());
                                 setSearchParams(searchParams);
                             }}
-                            className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${activeCategory === cat
-                                ? 'bg-primary text-white shadow-md'
-                                : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'
+                            className={`px-4 py-2 rounded-full text-sm font-bold transition-all whitespace-nowrap ${activeCategory === cat
+                                ? 'bg-primary text-white shadow-lg scale-105'
+                                : 'bg-white text-gray-600 hover:bg-gray-100 border border-gray-200'
                                 }`}
                         >
                             {cat}
