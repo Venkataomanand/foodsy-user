@@ -277,34 +277,60 @@ export default function Admin() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        console.log("Starting product submission...");
+
         if (!currentUser) {
+            console.error("No user logged in");
             alert("Please log in to save products.");
             return;
         }
+
+        if (!product.name || !product.price) {
+            alert("Name and Price are required!");
+            return;
+        }
+
         setUploading(true);
         try {
+            console.log("Uploading image if present...");
             let imageUrl = product.image;
-            if (imageFile) imageUrl = await uploadImage();
+            if (imageFile) {
+                imageUrl = await uploadImage();
+                console.log("Image uploaded:", imageUrl);
+            }
+
             const productData = {
                 ...product,
                 price: Number(product.price) || 0,
-                image: imageUrl
+                image: imageUrl,
+                available: product.available !== undefined ? product.available : true,
+                updatedAt: serverTimestamp()
             };
+
+            // Remove id from productData
+            delete productData.id;
+
             if (isEditing) {
+                console.log("Updating product:", editId, productData);
+                if (!editId) throw new Error("Edit ID is missing");
                 await updateProduct(editId, productData);
-                alert('Product Updated!');
+                alert('Product Updated Successfully!');
             } else {
-                await addProduct(productData);
-                alert('Product Added!');
+                console.log("Adding new product:", productData);
+                const newData = { ...productData, createdAt: serverTimestamp() };
+                await addProduct(newData);
+                alert('Product Added Successfully!');
             }
-            setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '' });
+
+            console.log("Submission complete, resetting form...");
+            setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', image: '', unit: '' });
             setImageFile(null);
             setUploadProgress(0);
             setIsEditing(false);
             setEditId(null);
         } catch (error) {
-            console.error(error);
-            alert(`Error saving product: ${error.message || 'Unknown error'}`);
+            console.error("Submission Error:", error);
+            alert(`Error saving product: ${error.message || 'Unknown error'}. Check console for details.`);
         } finally {
             setUploading(false);
         }
