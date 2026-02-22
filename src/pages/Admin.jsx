@@ -243,14 +243,33 @@ export default function Admin() {
     const uploadImage = async () => {
         if (!imageFile) return product.image;
         return new Promise((resolve, reject) => {
-            const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
-            const uploadTask = uploadBytesResumable(storageRef, imageFile);
-            uploadTask.on(
-                'state_changed',
-                (snapshot) => setUploadProgress((snapshot.bytesTransferred / snapshot.totalBytes) * 100),
-                (error) => reject(error),
-                () => getDownloadURL(uploadTask.snapshot.ref).then((downloadURL) => resolve(downloadURL))
-            );
+            try {
+                const storageRef = ref(storage, `products/${Date.now()}_${imageFile.name}`);
+                const uploadTask = uploadBytesResumable(storageRef, imageFile);
+                uploadTask.on(
+                    'state_changed',
+                    (snapshot) => {
+                        const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100;
+                        setUploadProgress(progress);
+                    },
+                    (error) => {
+                        console.error("Storage Error:", error);
+                        reject(error);
+                    },
+                    async () => {
+                        try {
+                            const downloadURL = await getDownloadURL(uploadTask.snapshot.ref);
+                            resolve(downloadURL);
+                        } catch (err) {
+                            console.error("GetDownloadURL Error:", err);
+                            reject(err);
+                        }
+                    }
+                );
+            } catch (error) {
+                console.error("Upload initialization error:", error);
+                reject(error);
+            }
         });
     };
 
@@ -294,7 +313,8 @@ export default function Admin() {
             category: prod.category,
             description: prod.description,
             emoji: prod.emoji || '🥑',
-            image: prod.image || ''
+            image: prod.image || '',
+            unit: prod.unit || ''
         });
     };
 
