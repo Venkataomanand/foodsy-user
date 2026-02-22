@@ -256,29 +256,31 @@ export default function Admin() {
             const fileName = `products/${Date.now()}_${imageFile.name.replace(/\s+/g, '_')}`;
             const storageRef = ref(storage, fileName);
 
-            console.log("📍 Storage Ref Path:", storageRef.fullPath);
+            // Add metadata for better compatibility
+            const metadata = {
+                contentType: imageFile.type || 'image/jpeg'
+            };
 
-            // Use simple uploadBytes for better reliability
-            const snapshot = await uploadBytes(storageRef, imageFile);
-            console.log("✅ Upload successful, getting URL...");
+            console.log("📍 Uploading to:", storageRef.fullPath, "with type:", metadata.contentType);
+
+            const snapshot = await uploadBytes(storageRef, imageFile, metadata);
+            console.log("✅ Upload successful!");
 
             const url = await getDownloadURL(snapshot.ref);
             return url;
         } catch (error) {
-            console.error("⛔ Firebase Storage Error Details:", {
-                code: error.code,
-                message: error.message,
-                name: error.name,
-                bucket: storage?.app?.options?.storageBucket
-            });
+            console.error("⛔ Firebase Storage Error:", error);
 
+            let userMessage = "Image upload failed.";
             if (error.code === 'storage/unauthorized') {
-                throw new Error("Firebase Storage Rules: You don't have permission to upload photos. Please check your Firebase Storage Rules.");
-            } else if (error.code === 'storage/retry-limit-exceeded') {
-                throw new Error("Upload timed out. Please check your internet connection.");
+                userMessage = "PERMISSION DENIED: Please check your Firebase Storage Rules. They must allow writes for authenticated users.";
+            } else if (error.code === 'storage/project-not-found') {
+                userMessage = "FIREBASE PROJECT NOT FOUND: Check your bucket name in firebase.js";
+            } else if (error.message.includes('timeout')) {
+                userMessage = "UPLOAD TIMEOUT: Your internet connection might be slow. Try a smaller image.";
             }
 
-            throw error;
+            throw new Error(`${userMessage} (${error.code || 'unknown'})`);
         }
     };
 
@@ -342,6 +344,10 @@ export default function Admin() {
             setUploadProgress(0);
             setIsEditing(false);
             setEditId(null);
+
+            // Clear the file input manually if needed
+            const fileInput = document.querySelector('input[type="file"]');
+            if (fileInput) fileInput.value = '';
 
         } catch (error) {
             console.error("❌ Submission Failed:", error);
