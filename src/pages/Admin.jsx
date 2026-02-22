@@ -44,7 +44,7 @@ export default function Admin() {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [product, setProduct] = useState({
-        name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: ''
+        name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: ''
     });
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -272,7 +272,7 @@ export default function Admin() {
                 await addProduct(productData);
                 alert('Product Added!');
             }
-            setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '' });
+            setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '' });
             setImageFile(null);
             setUploadProgress(0);
             setIsEditing(false);
@@ -391,9 +391,12 @@ export default function Admin() {
                                         </optgroup>
                                     </select>}</div>
                                 </div>
-                                <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Emoji Icon</label><input type="text" value={product.emoji} onChange={e => setProduct({ ...product, emoji: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" /></div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Unit/Quantity</label><input type="text" placeholder="e.g. 1kg, 500g, 1pc" value={product.unit} onChange={e => setProduct({ ...product, unit: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" /></div>
+                                    <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Emoji Icon</label><input type="text" value={product.emoji} onChange={e => setProduct({ ...product, emoji: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" /></div>
+                                </div>
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Description</label><textarea rows={3} value={product.description} onChange={e => setProduct({ ...product, description: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-medium" placeholder="Tasty ingredients..." /></div>
-                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
+                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', unit: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
                             </form>
                         </div>
                     </div>

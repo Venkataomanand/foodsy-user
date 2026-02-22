@@ -103,6 +103,7 @@ export default function ProductCard({ product }) {
 
                 <div className="flex justify-between items-start mb-1">
                     <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{product.name}</h3>
+                    {product.unit && <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-wider">{product.unit}</span>}
                 </div>
 
                 <p className="text-xs text-gray-500 mb-2">{product.category}</p>
