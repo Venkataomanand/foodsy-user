@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Hero from '../components/Hero';
 import ProductCard from '../components/ProductCard';
 import { useNavigate, Link } from 'react-router-dom';
+import { Tag } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 
@@ -49,6 +50,15 @@ const CATEGORY_GROUPS = [
 
 export default function Home() {
     const { currentUser } = useAuth();
+    const [offers, setOffers] = useState([]);
+
+    useEffect(() => {
+        const q = query(collection(db, 'offers'), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setOffers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleCustomOrder = async () => {
         const list = prompt("What do you want us to bring? (e.g. Milk, Eggs, Bread)");
@@ -79,6 +89,39 @@ export default function Home() {
     return (
         <div className="space-y-12 pb-20">
             <Hero />
+
+            {/* Offers for you section */}
+            {offers.length > 0 && (
+                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+                    <div className="flex items-center space-x-2 mb-6">
+                        <Tag className="h-6 w-6 text-primary" />
+                        <h2 className="text-2xl font-black text-gray-900">Best Offers for you</h2>
+                    </div>
+                    <div className="flex overflow-x-auto pb-6 scrollbar-hide space-x-6">
+                        {offers.map((offer) => (
+                            <div
+                                key={offer.id}
+                                className="flex-shrink-0 w-[280px] md:w-[350px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-6 text-white relative overflow-hidden group shadow-xl shadow-gray-200"
+                            >
+                                <div className="absolute -right-4 -bottom-4 text-8xl opacity-10 rotate-12 transition-transform group-hover:scale-110">
+                                    {offer.emoji || '🔥'}
+                                </div>
+                                <div className="relative z-10">
+                                    <div className="text-primary font-black text-sm uppercase tracking-wider mb-2">Exclusive Offer</div>
+                                    <h3 className="text-2xl font-black mb-2 leading-tight">{offer.title}</h3>
+                                    <p className="text-gray-400 text-sm font-medium mb-4">{offer.description}</p>
+                                    {offer.code && (
+                                        <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group/code cursor-pointer hover:bg-white/20 transition-all">
+                                            <span className="text-[10px] font-black uppercase text-gray-400">Code:</span>
+                                            <span className="text-sm font-black text-primary tracking-widest">{offer.code}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
 
             {/* Food Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">

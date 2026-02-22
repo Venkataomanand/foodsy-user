@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useProduct } from '../context/ProductContext';
-import { Pencil, Trash2, Plus, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play } from 'lucide-react';
+import { Pencil, Trash2, Plus, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag } from 'lucide-react';
 import { db, storage } from '../firebase';
 import {
     collection,
@@ -35,6 +35,9 @@ export default function Admin() {
     const [loadingOrders, setLoadingOrders] = useState(false);
     const [shorts, setShorts] = useState([]);
     const [loadingShorts, setLoadingShorts] = useState(false);
+    const [offers, setOffers] = useState([]);
+    const [loadingOffers, setLoadingOffers] = useState(false);
+    const [offerData, setOfferData] = useState({ title: '', description: '', code: '', emoji: '🔥' });
     const [stats, setStats] = useState({ daily: 0, weekly: 0, monthly: 0 });
 
     // Product Form State
@@ -101,20 +104,16 @@ export default function Admin() {
         }
     }
 
-    async function fetchShorts() {
-        setLoadingShorts(true);
+    async function fetchOffers() {
+        setLoadingOffers(true);
         try {
-            const q = query(collection(db, 'shorts'), orderBy('createdAt', 'desc'));
+            const q = query(collection(db, 'offers'), orderBy('createdAt', 'desc'));
             const snapshot = await getDocs(q);
-            const shortsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setShorts(shortsData);
+            setOffers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         } catch (error) {
-            console.error("Error fetching shorts:", error);
+            console.error("Error fetching offers:", error);
         } finally {
-            setLoadingShorts(false);
+            setLoadingOffers(false);
         }
     }
 
@@ -129,6 +128,8 @@ export default function Admin() {
             fetchOrders();
         } else if (activeTab === 'shorts') {
             fetchShorts();
+        } else if (activeTab === 'offers') {
+            fetchOffers();
         }
 
         return () => unsubStore();
@@ -169,6 +170,33 @@ export default function Admin() {
                 setShorts(shorts.filter(s => s.id !== id));
             } catch (error) {
                 console.error("Error deleting short:", error);
+            }
+        }
+    };
+
+    const handleAddOffer = async (e) => {
+        e.preventDefault();
+        try {
+            await addDoc(collection(db, 'offers'), {
+                ...offerData,
+                createdAt: serverTimestamp()
+            });
+            alert('Offer Added!');
+            setOfferData({ title: '', description: '', code: '', emoji: '🔥' });
+            fetchOffers();
+        } catch (error) {
+            console.error("Error adding offer:", error);
+            alert("Failed to add offer");
+        }
+    };
+
+    const handleDeleteOffer = async (id) => {
+        if (window.confirm('Delete this offer?')) {
+            try {
+                await deleteDoc(firestoreDoc(db, 'offers', id));
+                setOffers(offers.filter(o => o.id !== id));
+            } catch (error) {
+                console.error("Error deleting offer:", error);
             }
         }
     };
@@ -327,6 +355,7 @@ export default function Admin() {
             <div className="flex overflow-x-auto space-x-4 mb-8 pb-2">
                 <button onClick={() => { setActiveTab('products'); setProduct({ ...product, category: 'Biryanis' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
                 <button onClick={() => { setActiveTab('combos'); setProduct({ ...product, category: 'Combos' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'combos' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><span className="mr-2">🎁</span> Combos</button>
+                <button onClick={() => setActiveTab('offers')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'offers' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Tag className="h-5 w-5 mr-2" /> Offers</button>
                 <button onClick={() => setActiveTab('orders')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'orders' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><ShoppingBag className="h-5 w-5 mr-2" /> Orders</button>
                 <button onClick={() => setActiveTab('shorts')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'shorts' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Play className="h-5 w-5 mr-2" /> Shorts</button>
             </div>
@@ -380,6 +409,28 @@ export default function Admin() {
                                 ))}
                             </ul>
                         </div>
+                    </div>
+                </div>
+            ) : activeTab === 'offers' ? (
+                <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl p-6 border border-gray-100">
+                    <h2 className="text-xl font-black mb-8 flex items-center"><Tag className="h-6 w-6 mr-2 text-primary" /> Promotional Offers</h2>
+                    <form onSubmit={handleAddOffer} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
+                        <div><label className="text-[10px] font-black uppercase text-gray-400 mb-1 block">Offer Title</label><input type="text" required value={offerData.title} onChange={e => setOfferData({ ...offerData, title: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" placeholder="e.g. 50% OFF" /></div>
+                        <div><label className="text-[10px] font-black uppercase text-gray-400 mb-1 block">Offer Code</label><input type="text" value={offerData.code} onChange={e => setOfferData({ ...offerData, code: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" placeholder="e.g. WELCOME50" /></div>
+                        <div><label className="text-[10px] font-black uppercase text-gray-400 mb-1 block">Emoji</label><input type="text" value={offerData.emoji} onChange={e => setOfferData({ ...offerData, emoji: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" /></div>
+                        <div className="md:col-span-3"><label className="text-[10px] font-black uppercase text-gray-400 mb-1 block">Description</label><input type="text" required value={offerData.description} onChange={e => setOfferData({ ...offerData, description: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" placeholder="Offer details..." /></div>
+                        <div className="flex items-end"><button type="submit" className="w-full bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all shadow-lg shadow-gray-200">Add Offer</button></div>
+                    </form>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                        {offers.map(o => (
+                            <div key={o.id} className="bg-gray-50 rounded-3xl p-6 border border-gray-100 group relative">
+                                <button onClick={() => handleDeleteOffer(o.id)} className="absolute top-4 right-4 text-gray-300 hover:text-red-500 transition-colors"><Trash2 className="h-5 w-5" /></button>
+                                <div className="text-4xl mb-4">{o.emoji || '🔥'}</div>
+                                <h4 className="font-black text-lg text-gray-900">{o.title}</h4>
+                                <p className="text-gray-500 text-sm font-medium mt-1">{o.description}</p>
+                                {o.code && <div className="mt-4 inline-block bg-primary/10 text-primary px-3 py-1 rounded-lg text-xs font-black uppercase tracking-widest">{o.code}</div>}
+                            </div>
+                        ))}
                     </div>
                 </div>
             ) : activeTab === 'orders' ? (
