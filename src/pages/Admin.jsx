@@ -304,11 +304,14 @@ export default function Admin() {
             // 1. Image Upload with Timeout
             let imageUrl = product.image;
             if (imageFile) {
-                console.log("📸 Uploading image...");
+                console.log("📸 Uploading image to bucket:", storage?.app?.options?.storageBucket);
                 const uploadPromise = uploadImage();
-                const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Image upload timed out (15s)")), 15000));
+                // Increased timeout to 60 seconds for slower connections
+                const timeoutPromise = new Promise((_, reject) =>
+                    setTimeout(() => reject(new Error("Image upload timed out (60s). Please check your internet or Firebase Storage rules.")), 60000)
+                );
                 imageUrl = await Promise.race([uploadPromise, timeoutPromise]);
-                console.log("✅ Image URL:", imageUrl);
+                console.log("✅ Image URL generated successfully");
             }
 
             // 2. Prepare Clean Data Object
@@ -331,7 +334,9 @@ export default function Admin() {
                 ? updateDoc(firestoreDoc(db, 'products', editId), finalProductData)
                 : addDoc(collection(db, 'products'), { ...finalProductData, createdAt: serverTimestamp() });
 
-            const dbTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Database operation timed out (15s)")), 15000));
+            const dbTimeout = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error("Database operation timed out (30s). Check your Firestore connection.")), 30000)
+            );
 
             await Promise.race([dbOperation, dbTimeout]);
 
