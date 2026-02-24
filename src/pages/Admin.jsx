@@ -446,7 +446,25 @@ export default function Admin() {
                             <h2 className="text-xl font-black mb-6 flex items-center">{isEditing ? <Pencil className="h-5 w-5 mr-2 text-primary" /> : <Plus className="h-5 w-5 mr-2 text-primary" />}{isEditing ? 'Update Item' : 'Add New Item'}</h2>
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Item Name</label><input type="text" required value={product.name} onChange={e => setProduct({ ...product, name: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" placeholder="e.g. Chicken Biryani" /></div>
-                                <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Image</label><input type="file" accept="image/*" onChange={handleImageChange} className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white" />{uploadProgress > 0 && <div className="mt-2 bg-gray-100 rounded-full h-1.5 overflow-hidden"><div className="bg-primary h-1.5 transition-all" style={{ width: `${uploadProgress}%` }}></div></div>}</div>
+                                <div>
+                                    <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Image</label>
+                                    <div className="space-y-2">
+                                        <input type="file" accept="image/*" onChange={handleImageChange} className="w-full text-xs text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary file:text-white" />
+                                        <div className="flex items-center gap-2">
+                                            <div className="h-[1px] flex-1 bg-gray-100"></div>
+                                            <span className="text-[10px] font-bold text-gray-300">OR PASTE URL</span>
+                                            <div className="h-[1px] flex-1 bg-gray-100"></div>
+                                        </div>
+                                        <input
+                                            type="text"
+                                            placeholder="Paste image link here (e.g. https://...)"
+                                            value={product.image}
+                                            onChange={e => setProduct({ ...product, image: e.target.value })}
+                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-medium focus:ring-2 focus:ring-primary/20"
+                                        />
+                                    </div>
+                                    {uploadProgress > 0 && <div className="mt-2 bg-gray-100 rounded-full h-1.5 overflow-hidden"><div className="bg-primary h-1.5 transition-all" style={{ width: `${uploadProgress}%` }}></div></div>}
+                                </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Price (₹)</label><input type="number" required value={product.price} onChange={e => setProduct({ ...product, price: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" /></div>
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Category</label>{activeTab === 'combos' ? <div className="bg-gray-100 p-4 rounded-2xl text-sm font-bold text-gray-400">Combos</div> : <select value={product.category} onChange={e => setProduct({ ...product, category: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20">
