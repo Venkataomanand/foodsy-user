@@ -16,6 +16,7 @@ const CATEGORY_GROUPS = [
         subtitle: "Biryanis, Pulavs, Desserts & more",
         items: [
             { name: 'Biryanis', icon: '🍛', color: 'bg-orange-50', link: '/products?category=biryanis' },
+            { name: 'Tiffins', icon: '🥗', color: 'bg-lime-50', link: '/products?category=tiffins' },
             { name: 'Pulavs', icon: '🥘', color: 'bg-yellow-50', link: '/products?category=pulavs' },
             { name: 'Desserts', icon: '🍰', color: 'bg-pink-50', link: '/products?category=desserts' },
             { name: 'Milkshakes', icon: '🥤', color: 'bg-purple-50', link: '/products?category=milkshakes' },
@@ -94,7 +95,7 @@ export default function Home() {
             <Hero />
 
             {/* Restaurants Section */}
-            {restaurants && restaurants.length > 0 && (
+            {restaurants && restaurants.filter(r => r.isOpen !== false).length > 0 && (
                 <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
                     <div className="flex items-center justify-between mb-8">
                         <div className="flex items-center space-x-2">
@@ -107,7 +108,7 @@ export default function Home() {
                         <Link to="/products?category=food" className="text-primary font-bold text-sm hover:underline italic bg-primary/5 px-4 py-2 rounded-xl transition-all">Explore More</Link>
                     </div>
                     <div className="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide space-x-6">
-                        {restaurants.map((res) => (
+                        {restaurants.filter(r => r.isOpen !== false).map((res) => (
                             <RestaurantCard key={res.id} restaurant={res} />
                         ))}
                     </div>

@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 import { motion } from 'framer-motion';
 const CATEGORY_STRUCTURE = {
-    'Food': ['Biryanis', 'Pulavs', 'Desserts', 'Milkshakes', 'Beverages'],
+    'Food': ['Biryanis', 'Tiffins', 'Pulavs', 'Desserts', 'Milkshakes', 'Beverages'],
     'Vegetables': ['Fruits', 'Green Leafy Vegetables', 'Vegetables'],
     'Grocery': ['Rice & Dals', 'Oils & Spices', 'Snacks & Drinks', 'Essentials'],
     'Combos': []
