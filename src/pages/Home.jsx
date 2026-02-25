@@ -2,13 +2,11 @@ import { useState, useEffect } from 'react';
 import Hero from '../components/Hero';
 import ProductCard from '../components/ProductCard';
 import { useNavigate, Link } from 'react-router-dom';
-import { Tag, Building } from 'lucide-react';
+import { Tag } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
-import { useProduct } from '../context/ProductContext';
 import CustomOrderModal from '../components/CustomOrderModal';
-import RestaurantCard from '../components/RestaurantCard';
 
 const CATEGORY_GROUPS = [
     {
@@ -53,7 +51,6 @@ const CATEGORY_GROUPS = [
 
 export default function Home() {
     const { currentUser } = useAuth();
-    const { restaurants } = useProduct();
     const [offers, setOffers] = useState([]);
 
     useEffect(() => {
@@ -94,26 +91,6 @@ export default function Home() {
         <div className="space-y-12 pb-20">
             <Hero />
 
-            {/* Restaurants Section */}
-            {restaurants && restaurants.filter(r => r.isOpen !== false).length > 0 && (
-                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-                    <div className="flex items-center justify-between mb-8">
-                        <div className="flex items-center space-x-2">
-                            <Building className="h-7 w-7 text-primary" />
-                            <div>
-                                <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-none">Top Restaurants</h2>
-                                <p className="text-gray-400 text-xs font-bold mt-1 uppercase tracking-widest">Handpicked for you</p>
-                            </div>
-                        </div>
-                        <Link to="/products?category=food" className="text-primary font-bold text-sm hover:underline italic bg-primary/5 px-4 py-2 rounded-xl transition-all">Explore More</Link>
-                    </div>
-                    <div className="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide space-x-6">
-                        {restaurants.filter(r => r.isOpen !== false).map((res) => (
-                            <RestaurantCard key={res.id} restaurant={res} />
-                        ))}
-                    </div>
-                </section>
-            )}
 
             {/* Offers for you section */}
             {offers.length > 0 && (

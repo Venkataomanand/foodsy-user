@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
+import RestaurantCard from '../components/RestaurantCard';
 import { Filter, Loader, Building, MapPin, Star, Clock } from 'lucide-react';
 import { useProduct } from '../context/ProductContext';
 import { db } from '../firebase';
@@ -220,6 +221,25 @@ export default function Products() {
                     )}
                 </div>
             </div>
+
+            {/* Restaurants Strip — shown when browsing Food or All, no restaurant selected */}
+            {!restaurantId && (activeMainCategory === 'Food' || activeMainCategory === 'All') && restaurants.filter(r => r.isOpen !== false).length > 0 && (
+                <div className="mb-10">
+                    <div className="flex items-center gap-2 mb-5">
+                        <Building className="h-6 w-6 text-primary" />
+                        <div>
+                            <h2 className="text-xl font-black text-gray-900 leading-none">Restaurants</h2>
+                            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mt-0.5">Browse by restaurant</p>
+                        </div>
+                    </div>
+                    <div className="flex overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide gap-5">
+                        {restaurants.filter(r => r.isOpen !== false).map(res => (
+                            <RestaurantCard key={res.id} restaurant={res} />
+                        ))}
+                    </div>
+                    <div className="mt-6 border-t border-gray-100" />
+                </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                 {filteredProducts.map(product => (
