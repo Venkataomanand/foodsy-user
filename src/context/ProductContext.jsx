@@ -19,20 +19,25 @@ export function useProduct() {
 
 export function ProductProvider({ children }) {
     const [products, setProducts] = useState([]);
+    const [restaurants, setRestaurants] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const q = query(collection(db, 'products'), orderBy('category'));
-        const unsubscribe = onSnapshot(q, (snapshot) => {
-            const productsData = snapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data()
-            }));
-            setProducts(productsData);
+        const qProducts = query(collection(db, 'products'), orderBy('category'));
+        const unsubProducts = onSnapshot(qProducts, (snapshot) => {
+            setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
             setLoading(false);
         });
 
-        return unsubscribe;
+        const qRestaurants = query(collection(db, 'restaurants'), orderBy('name'));
+        const unsubRestaurants = onSnapshot(qRestaurants, (snapshot) => {
+            setRestaurants(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+
+        return () => {
+            unsubProducts();
+            unsubRestaurants();
+        };
     }, []);
 
     async function addProduct(product) {
@@ -49,11 +54,29 @@ export function ProductProvider({ children }) {
         return deleteDoc(productRef);
     }
 
+    async function addRestaurant(restaurant) {
+        return addDoc(collection(db, 'restaurants'), restaurant);
+    }
+
+    async function updateRestaurant(id, updates) {
+        const restaurantRef = doc(db, 'restaurants', id);
+        return updateDoc(restaurantRef, updates);
+    }
+
+    async function deleteRestaurant(id) {
+        const restaurantRef = doc(db, 'restaurants', id);
+        return deleteDoc(restaurantRef);
+    }
+
     const value = {
         products,
+        restaurants,
         addProduct,
         updateProduct,
         deleteProduct,
+        addRestaurant,
+        updateRestaurant,
+        deleteRestaurant,
         loading
     };
 

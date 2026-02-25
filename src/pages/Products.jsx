@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import ProductCard from '../components/ProductCard';
-import { Filter, Loader } from 'lucide-react';
+import { Filter, Loader, Building, MapPin, Star, Clock } from 'lucide-react';
 import { useProduct } from '../context/ProductContext';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
@@ -26,12 +26,13 @@ const getParentCategory = (subCat) => {
 };
 
 export default function Products() {
-    const { products, loading } = useProduct();
+    const { products, restaurants, loading } = useProduct();
     const { currentUser } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
     const categoryFilter = searchParams.get('category');
     const searchQuery = searchParams.get('search') || '';
+    const restaurantId = searchParams.get('restaurant');
 
     // States for hierarchical filtering
     const [activeMainCategory, setActiveMainCategory] = useState('All');
@@ -78,6 +79,9 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
+        // 0. Filter by Restaurant
+        if (restaurantId && product.restaurantId !== restaurantId) return false;
+
         const productCat = product.category || '';
         const parentCat = getParentCategory(productCat);
 
@@ -113,9 +117,46 @@ export default function Products() {
         setSearchParams(searchParams);
     };
 
+    const currentRestaurant = restaurantId ? restaurants.find(r => r.id === restaurantId) : null;
+
     return (
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <CustomOrderModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
+
+            {/* Restaurant Profile Header */}
+            {currentRestaurant && (
+                <div className="mb-12 bg-white rounded-[2rem] overflow-hidden shadow-2xl shadow-gray-200 border border-gray-100 flex flex-col md:flex-row">
+                    <div className="h-48 md:h-auto md:w-1/3 relative overflow-hidden">
+                        <img
+                            src={currentRestaurant.image || 'https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80'}
+                            alt={currentRestaurant.name}
+                            className="w-full h-full object-cover"
+                        />
+                        <div className="absolute top-4 left-4 bg-primary text-white text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-widest shadow-lg">
+                            Featured
+                        </div>
+                    </div>
+                    <div className="p-8 md:w-2/3 flex flex-col justify-center">
+                        <h1 className="text-3xl md:text-4xl font-black text-gray-900 mb-1">{currentRestaurant.name}</h1>
+                        <p className="text-gray-400 font-bold mb-6 text-sm">{currentRestaurant.cuisine || 'North Indian • Biryani • Chinese'}</p>
+                        <div className="flex flex-wrap gap-3 items-center">
+                            <div className="flex items-center space-x-2 bg-green-500 text-white px-4 py-2 rounded-2xl shadow-lg shadow-green-200">
+                                <Star className="h-4 w-4 fill-white" />
+                                <span className="font-black">{currentRestaurant.rating || '4.5'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 bg-gray-50 text-gray-600 px-4 py-2 rounded-2xl border border-gray-100">
+                                <Clock className="h-4 w-4 text-gray-400" />
+                                <span className="font-black text-sm">{currentRestaurant.deliveryTime || '30-40 min'}</span>
+                            </div>
+                            <div className="flex items-center space-x-2 bg-gray-50 text-gray-600 px-4 py-2 rounded-2xl border border-gray-100">
+                                <MapPin className="h-4 w-4 text-gray-400" />
+                                <span className="font-black text-sm">JNTUK, Kakinada</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <div className="flex flex-col space-y-6 mb-8">
                 <div className="flex flex-col md:flex-row justify-between items-center">
                     <div>
