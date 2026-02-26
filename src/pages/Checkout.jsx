@@ -128,7 +128,8 @@ export default function Checkout() {
                     name: item.name,
                     price: item.price,
                     quantity: item.quantity,
-                    selectedOption: item.selectedOption || null
+                    selectedOption: item.selectedOption || null,
+                    unit: item.unit || null
                 })),
                 total: finalTotal,
                 status: 'Placed',
