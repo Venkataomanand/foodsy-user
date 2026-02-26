@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProduct } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
-import { Pencil, Trash2, Plus, PlusCircle, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag, Utensils, Building } from 'lucide-react';
+import { Pencil, Trash2, Plus, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag, Search, Building } from 'lucide-react';
 import { db, storage } from '../firebase';
 import {
     collection,
@@ -65,6 +65,9 @@ export default function Admin() {
     // Store Status State
     const [storeOpen, setStoreOpen] = useState(true);
     const [updatingStore, setUpdatingStore] = useState(false);
+
+    // Search State
+    const [orderSearchQuery, setOrderSearchQuery] = useState('');
 
     // Utility Functions
     function calculateStats(ordersData) {
@@ -650,21 +653,74 @@ export default function Admin() {
                         <div className="bg-white p-6 rounded-3xl shadow-xl shadow-purple-100/20 border border-purple-50"><p className="text-[10px] font-black uppercase text-gray-400 tracking-widest">Monthly Growth</p><p className="text-3xl font-black text-purple-600 mt-1">₹{Number(stats.monthly || 0).toFixed(2)}</p></div>
                     </div>
                     <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden border border-gray-100">
-                        <div className="p-6 border-b border-gray-50 flex justify-between items-center"><h2 className="text-xl font-black">Live Orders</h2>{loadingOrders && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}</div>
+                        <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
+                            <h2 className="text-xl font-black">Live Orders</h2>
+                            <div className="flex items-center bg-gray-50 rounded-2xl px-4 py-2 border border-gray-100 w-full md:w-96">
+                                <Search className="h-4 w-4 text-gray-400 mr-2" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by Order ID or User ID..."
+                                    value={orderSearchQuery}
+                                    onChange={(e) => setOrderSearchQuery(e.target.value)}
+                                    className="bg-transparent border-none focus:ring-0 text-sm font-bold w-full"
+                                />
+                            </div>
+                            {loadingOrders && <RefreshCw className="h-5 w-5 animate-spin text-primary" />}
+                        </div>
                         <div className="overflow-x-auto">
                             <table className="w-full">
-                                <thead className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-widest"><tr><th className="px-6 py-4 text-left">Status</th><th className="px-6 py-4 text-left">Customer</th><th className="px-6 py-4 text-left">Items</th><th className="px-6 py-4 text-left">Total</th><th className="px-6 py-4 text-left">Time</th><th className="px-6 py-4 text-right">Action</th></tr></thead>
+                                <thead className="bg-gray-50/50 text-[10px] font-black uppercase text-gray-400 tracking-widest">
+                                    <tr>
+                                        <th className="px-6 py-4 text-left">Status</th>
+                                        <th className="px-6 py-4 text-left">Order Details</th>
+                                        <th className="px-6 py-4 text-left">Customer</th>
+                                        <th className="px-6 py-4 text-left">Items</th>
+                                        <th className="px-6 py-4 text-left">Total</th>
+                                        <th className="px-6 py-4 text-left">Time</th>
+                                        <th className="px-6 py-4 text-right">Action</th>
+                                    </tr>
+                                </thead>
                                 <tbody className="divide-y divide-gray-50">
-                                    {orders.map((o) => (
-                                        <tr key={o.id} className="hover:bg-gray-50/30 transition-colors">
-                                            <td className="px-6 py-4"><select value={o.status || 'Placed'} onChange={(e) => handleStatusChange(o.id, e.target.value)} className="bg-white border-0 rounded-full text-xs font-black py-1.5 pl-3 pr-8 shadow-sm focus:ring-2 focus:ring-primary/20"><option value="Placed">Placed</option><option value="Ready">Ready</option><option value="Picked Up">Picked Up</option><option value="Delivered">Delivered</option></select></td>
-                                            <td className="px-6 py-4"><div className="font-black text-sm text-gray-900">{o.firstName || o.email?.split('@')[0]}</div><div className="text-[10px] text-gray-400">{o.phone || 'N/A'}</div></td>
-                                            <td className="px-6 py-4 font-bold text-[10px] text-gray-500 max-w-[200px] truncate">{o.isCustom ? <span className="text-primary">{o.customList}</span> : o.items?.map(i => `${i.name}x${i.quantity}`).join(', ')}</td>
-                                            <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.total || 0).toFixed(2)}</td>
-                                            <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date} {o.time}</td>
-                                            <td className="px-6 py-4 text-right"><button onClick={() => deleteOrder(o.id)} className="p-2 text-red-400 hover:text-red-600 transition-colors"><Trash2 className="h-5 w-5" /></button></td>
-                                        </tr>
-                                    ))}
+                                    {orders
+                                        .filter(o =>
+                                            o.id.toLowerCase().includes(orderSearchQuery.toLowerCase()) ||
+                                            (o.userId && o.userId.toLowerCase().includes(orderSearchQuery.toLowerCase()))
+                                        )
+                                        .map((o) => (
+                                            <tr key={o.id} className="hover:bg-gray-50/30 transition-colors">
+                                                <td className="px-6 py-4">
+                                                    <select
+                                                        value={o.status || 'Placed'}
+                                                        onChange={(e) => handleStatusChange(o.id, e.target.value)}
+                                                        className="bg-white border-0 rounded-full text-[10px] font-black py-1.5 pl-3 pr-8 shadow-sm focus:ring-2 focus:ring-primary/20"
+                                                    >
+                                                        <option value="Placed">Placed</option>
+                                                        <option value="Ready">Ready</option>
+                                                        <option value="Picked Up">Picked Up</option>
+                                                        <option value="Delivered">Delivered</option>
+                                                    </select>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-black text-[10px] text-gray-900 leading-none mb-1">{o.id}</div>
+                                                    <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">UID: {o.userId?.substring(0, 8)}...</div>
+                                                </td>
+                                                <td className="px-6 py-4">
+                                                    <div className="font-black text-sm text-gray-900">{o.fullName || o.firstName || o.email?.split('@')[0]}</div>
+                                                    <div className="text-[10px] font-bold text-gray-500">{o.phone || 'N/A'}</div>
+                                                    <div className="text-[9px] font-medium text-gray-400 line-clamp-1">{o.address}</div>
+                                                </td>
+                                                <td className="px-6 py-4 font-bold text-[10px] text-gray-500 max-w-[200px] truncate">
+                                                    {o.isCustom ? <span className="text-primary">{o.customList}</span> : o.items?.map(i => `${i.name}x${i.quantity}`).join(', ')}
+                                                </td>
+                                                <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.total || 0).toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date} {o.time}</td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <button onClick={() => deleteOrder(o.id)} className="p-2 text-red-400 hover:text-red-600 transition-colors">
+                                                        <Trash2 className="h-5 w-5" />
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </div>

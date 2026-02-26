@@ -6,8 +6,8 @@ export default function RestaurantCard({ restaurant }) {
 
     return (
         <div
-            onClick={() => navigate(`/products?restaurant=${restaurant.id}`)}
-            className="flex-shrink-0 w-[280px] md:w-[320px] group cursor-pointer"
+            onClick={() => restaurant.isOpen !== false && navigate(`/products?restaurant=${restaurant.id}`)}
+            className={`flex-shrink-0 w-[280px] md:w-[320px] group cursor-pointer ${restaurant.isOpen === false ? 'grayscale opacity-75 cursor-not-allowed' : ''}`}
         >
             <div className="relative h-48 rounded-3xl overflow-hidden shadow-lg shadow-gray-200/50 mb-4 transition-transform group-hover:scale-[1.02] duration-500">
                 <img
@@ -24,6 +24,13 @@ export default function RestaurantCard({ restaurant }) {
                         </div>
                     </div>
                 </div>
+                {restaurant.isOpen === false && (
+                    <div className="absolute inset-0 bg-gray-900/60 backdrop-blur-[1px] flex items-center justify-center z-20">
+                        <span className="bg-red-600 text-white text-xs font-black px-4 py-2 rounded-2xl uppercase tracking-[0.2em] shadow-2xl transform -rotate-12 border-2 border-white/20">
+                            Closed
+                        </span>
+                    </div>
+                )}
             </div>
             <div>
                 <h3 className="text-xl font-black text-gray-900 group-hover:text-primary transition-colors leading-tight mb-1">{restaurant.name}</h3>
