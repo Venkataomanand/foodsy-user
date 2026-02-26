@@ -741,8 +741,26 @@ export default function Admin() {
                                                     <div className="text-[10px] font-bold text-gray-500">{o.phone || 'N/A'}</div>
                                                     <div className="text-[9px] font-medium text-gray-400 line-clamp-1">{o.address}</div>
                                                 </td>
-                                                <td className="px-6 py-4 font-bold text-[10px] text-gray-500 max-w-[200px] truncate">
-                                                    {o.isCustom ? <span className="text-primary">{o.customList}</span> : o.items?.map(i => `${i.name}${(i.selectedOption || i.unit) ? ` (${i.selectedOption || i.unit})` : ''} x ${i.quantity}`).join(', ')}
+                                                <td className="px-6 py-4 max-w-[250px]">
+                                                    {o.isCustom ? (
+                                                        <span className="text-primary font-bold">{o.customList}</span>
+                                                    ) : (
+                                                        <div className="flex flex-col gap-1">
+                                                            {o.items?.map((i, idx) => (
+                                                                <div key={idx} className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                                                                    <span className="font-black text-[10px] text-gray-900 line-clamp-1 flex-1">{i.name}</span>
+                                                                    {(i.selectedOption || i.unit) && (
+                                                                        <span className="bg-primary/10 text-primary text-[9px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap">
+                                                                            {i.selectedOption || i.unit}
+                                                                        </span>
+                                                                    )}
+                                                                    <span className="text-[10px] font-black text-gray-400 bg-white px-1.5 py-0.5 rounded border border-gray-100">
+                                                                        x{i.quantity}
+                                                                    </span>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
                                                 </td>
                                                 <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.total || 0).toFixed(2)}</td>
                                                 <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date} {o.time}</td>
