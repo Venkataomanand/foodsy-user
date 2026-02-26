@@ -53,9 +53,9 @@ export default function Home() {
         <div className="space-y-12 pb-20">
             <Hero />
 
-            {/* "What's on your mind?" - Swiggy Style */}
+            {/* Menu Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-8">What's on your mind?</h2>
+                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-8 font-black uppercase tracking-tight">Explore Our Menu</h2>
                 <div className="flex overflow-x-auto pb-6 scrollbar-hide space-x-6 md:grid md:grid-cols-6 md:space-x-0 md:gap-8">
                     {CATEGORIES.map((cat) => (
                         <Link

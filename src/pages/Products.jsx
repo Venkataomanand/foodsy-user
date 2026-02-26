@@ -10,7 +10,7 @@ import CustomOrderModal from '../components/CustomOrderModal';
 
 
 export default function Products() {
-    const { products, loading } = useProduct();
+    const { products, restaurants, loading } = useProduct();
     const { currentUser } = useAuth();
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [searchParams, setSearchParams] = useSearchParams();
@@ -41,6 +41,13 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
+        // --- RESTAURANT FILTER ---
+        if (product.restaurantId) {
+            const restaurant = restaurants.find(r => r.id === product.restaurantId);
+            // Hide product if restaurant exists but is closed
+            if (restaurant && restaurant.isOpen === false) return false;
+        }
+
         const rawCat = (product.category || '').toLowerCase();
         const productName = (product.name || '').toLowerCase();
         const productDesc = (product.description || '').toLowerCase();
