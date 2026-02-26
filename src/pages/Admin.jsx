@@ -631,9 +631,21 @@ export default function Admin() {
                                                 {prod.emoji || '🥘'}
                                             </div>
                                             <div>
-                                                <h3 className="font-black text-gray-900">{prod.name}</h3>
+                                                <div className="flex items-center gap-2">
+                                                    <h3 className="font-black text-gray-900">{prod.name}</h3>
+                                                    {prod.unit && (
+                                                        <span className="bg-gray-100 text-gray-500 text-[9px] font-black px-1.5 py-0.5 rounded-md border border-gray-200 uppercase tracking-tighter">
+                                                            {prod.unit}
+                                                        </span>
+                                                    )}
+                                                </div>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                                                    {prod.category} • ₹{Number(prod.price || 0).toFixed(2)} {prod.options ? ` [Options: ${prod.options}]` : (prod.unit ? ` (${prod.unit})` : '')}
+                                                    {prod.category} • ₹{Number(prod.price || 0).toFixed(2)}
+                                                    {prod.options && (
+                                                        <span className="ml-1 text-primary">
+                                                            • Options: {prod.options}
+                                                        </span>
+                                                    )}
                                                     {prod.restaurantId && ` • ${restaurants.find(r => r.id === prod.restaurantId)?.name}`}
                                                 </p>
                                             </div>
@@ -750,8 +762,8 @@ export default function Admin() {
                                                                 <div key={idx} className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
                                                                     <span className="font-black text-[10px] text-gray-900 line-clamp-1 flex-1">{i.name}</span>
                                                                     {(i.selectedOption || i.unit) && (
-                                                                        <span className="bg-primary/10 text-primary text-[9px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap">
-                                                                            {i.selectedOption || i.unit}
+                                                                        <span className="bg-orange-100 text-orange-700 text-[9px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap border border-orange-200">
+                                                                            WEIGHT: {i.selectedOption || i.unit}
                                                                         </span>
                                                                     )}
                                                                     <span className="text-[10px] font-black text-gray-400 bg-white px-1.5 py-0.5 rounded border border-gray-100">
