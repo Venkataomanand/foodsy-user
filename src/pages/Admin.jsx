@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProduct } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
-import { Pencil, Trash2, Plus, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag, Search, Building } from 'lucide-react';
+import { Pencil, Trash2, Plus, PlusCircle, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag, Search, Building } from 'lucide-react';
 import { db, storage } from '../firebase';
 import {
     collection,
@@ -68,6 +68,7 @@ export default function Admin() {
 
     // Search State
     const [orderSearchQuery, setOrderSearchQuery] = useState('');
+    const [restaurantSearchQuery, setRestaurantSearchQuery] = useState('');
 
     // Utility Functions
     function calculateStats(ordersData) {
@@ -789,62 +790,74 @@ export default function Admin() {
                     </div>
                     <div className="lg:col-span-2">
                         <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden border border-gray-100">
-                            <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+                            <div className="p-6 border-b border-gray-50 flex flex-col md:flex-row justify-between items-center gap-4">
                                 <h2 className="text-xl font-black">All Restaurants</h2>
+                                <div className="flex items-center bg-gray-50 rounded-2xl px-4 py-2 border border-gray-100 w-full md:w-80">
+                                    <Search className="h-4 w-4 text-gray-400 mr-2" />
+                                    <input
+                                        type="text"
+                                        placeholder="Search restaurants..."
+                                        value={restaurantSearchQuery}
+                                        onChange={(e) => setRestaurantSearchQuery(e.target.value)}
+                                        className="bg-transparent border-none focus:ring-0 text-xs font-bold w-full"
+                                    />
+                                </div>
                                 <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-black uppercase">{restaurants.length} Total</span>
                             </div>
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
-                                {restaurants.map(res => (
-                                    <div key={res.id} className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 group">
-                                        <div className="relative h-32 w-full">
-                                            <img src={res.image || 'https://via.placeholder.com/400x200'} alt={res.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                                            {/* Closed overlay */}
-                                            {res.isOpen === false && (
-                                                <div className="absolute inset-0 bg-gray-900/60 flex items-center justify-center">
-                                                    <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">Closed</span>
+                                {restaurants
+                                    .filter(res => res.name.toLowerCase().includes(restaurantSearchQuery.toLowerCase()))
+                                    .map(res => (
+                                        <div key={res.id} className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 group">
+                                            <div className="relative h-32 w-full">
+                                                <img src={res.image || 'https://via.placeholder.com/400x200'} alt={res.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                                {/* Closed overlay */}
+                                                {res.isOpen === false && (
+                                                    <div className="absolute inset-0 bg-gray-900/60 flex items-center justify-center">
+                                                        <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">Closed</span>
+                                                    </div>
+                                                )}
+                                                <div className="absolute top-2 right-2 flex gap-1">
+                                                    <button onClick={() => handleEditRestaurant(res)} className="p-2 bg-white/90 backdrop-blur-md rounded-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Pencil className="h-4 w-4" /></button>
+                                                    <button onClick={() => deleteRestaurant(res.id)} className="p-2 bg-white/90 backdrop-blur-md rounded-lg text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"><Trash2 className="h-4 w-4" /></button>
                                                 </div>
-                                            )}
-                                            <div className="absolute top-2 right-2 flex gap-1">
-                                                <button onClick={() => handleEditRestaurant(res)} className="p-2 bg-white/90 backdrop-blur-md rounded-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Pencil className="h-4 w-4" /></button>
-                                                <button onClick={() => deleteRestaurant(res.id)} className="p-2 bg-white/90 backdrop-blur-md rounded-lg text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"><Trash2 className="h-4 w-4" /></button>
+                                                {/* ON/OFF Toggle */}
+                                                <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-2 py-1.5 rounded-lg shadow-sm">
+                                                    <button
+                                                        onClick={() => updateRestaurant(res.id, { isOpen: res.isOpen === false ? true : false })}
+                                                        className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${res.isOpen !== false ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                    >
+                                                        <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${res.isOpen !== false ? 'translate-x-4' : 'translate-x-1'}`} />
+                                                    </button>
+                                                    <span className={`text-[9px] font-black uppercase ${res.isOpen !== false ? 'text-green-600' : 'text-gray-400'}`}>
+                                                        {res.isOpen !== false ? 'Open' : 'Closed'}
+                                                    </span>
+                                                </div>
                                             </div>
-                                            {/* ON/OFF Toggle */}
-                                            <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-2 py-1.5 rounded-lg shadow-sm">
+                                            <div className="p-4">
+                                                <h4 className="font-black text-gray-900">{res.name}</h4>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">{res.cuisine || 'Multi-cuisine'}</p>
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md text-[10px] font-black">⭐ {res.rating}</span>
+                                                    <span className="text-[10px] font-bold text-gray-500">🕒 {res.deliveryTime}</span>
+                                                </div>
+                                                {/* Item count badge */}
+                                                <div className="flex items-center justify-between mb-3">
+                                                    <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg">
+                                                        {products.filter(p => p.restaurantId === res.id).length} items linked
+                                                    </span>
+                                                </div>
+                                                {/* Add Items Button */}
                                                 <button
-                                                    onClick={() => updateRestaurant(res.id, { isOpen: res.isOpen === false ? true : false })}
-                                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${res.isOpen !== false ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                    onClick={() => handleAddItemsToRestaurant(res)}
+                                                    className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-black py-2.5 rounded-xl hover:bg-primary transition-all group/btn"
                                                 >
-                                                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${res.isOpen !== false ? 'translate-x-4' : 'translate-x-1'}`} />
+                                                    <PlusCircle className="h-4 w-4 group-hover/btn:rotate-90 transition-transform" />
+                                                    Add Items to this Restaurant
                                                 </button>
-                                                <span className={`text-[9px] font-black uppercase ${res.isOpen !== false ? 'text-green-600' : 'text-gray-400'}`}>
-                                                    {res.isOpen !== false ? 'Open' : 'Closed'}
-                                                </span>
                                             </div>
                                         </div>
-                                        <div className="p-4">
-                                            <h4 className="font-black text-gray-900">{res.name}</h4>
-                                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">{res.cuisine || 'Multi-cuisine'}</p>
-                                            <div className="flex items-center justify-between mb-3">
-                                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md text-[10px] font-black">⭐ {res.rating}</span>
-                                                <span className="text-[10px] font-bold text-gray-500">🕒 {res.deliveryTime}</span>
-                                            </div>
-                                            {/* Item count badge */}
-                                            <div className="flex items-center justify-between mb-3">
-                                                <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg">
-                                                    {products.filter(p => p.restaurantId === res.id).length} items linked
-                                                </span>
-                                            </div>
-                                            {/* Add Items Button */}
-                                            <button
-                                                onClick={() => handleAddItemsToRestaurant(res)}
-                                                className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-black py-2.5 rounded-xl hover:bg-primary transition-all group/btn"
-                                            >
-                                                <PlusCircle className="h-4 w-4 group-hover/btn:rotate-90 transition-transform" />
-                                                Add Items to this Restaurant
-                                            </button>
-                                        </div>
-                                    </div>
-                                ))}
+                                    ))}
                             </div>
                         </div>
                     </div>
