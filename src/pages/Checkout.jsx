@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -10,12 +10,19 @@ export default function Checkout() {
     const { cartItems, cartTotal, clearCart } = useCart();
     const { currentUser } = useAuth();
     const navigate = useNavigate();
+
+    // Enforce login
+    useEffect(() => {
+        if (!currentUser) {
+            navigate('/login?redirect=checkout');
+        }
+    }, [currentUser, navigate]);
+
     const [loading, setLoading] = useState(false);
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [orderData, setOrderData] = useState(null);
     const [formData, setFormData] = useState({
-        firstName: '',
-        lastName: '',
+        fullName: '',
         address: '',
         area: '',
         phone: ''
@@ -74,8 +81,8 @@ export default function Checkout() {
     };
 
     // Generate Custom ID: First 2 chars of Name (uppercase) + Date (YYYYMMDD) + Random
-    const generateOrderId = (firstName) => {
-        const prefix = firstName ? firstName.substring(0, 2).toUpperCase() : 'GU';
+    const generateOrderId = (fullName) => {
+        const prefix = fullName ? fullName.substring(0, 2).toUpperCase() : 'GU';
         const date = new Date();
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, '0');
@@ -87,23 +94,29 @@ export default function Checkout() {
         e.preventDefault();
         setLoading(true);
 
+        if (!currentUser) {
+            alert("Please login to place an order");
+            navigate('/login');
+            setLoading(false);
+            return;
+        }
+
         if (formData.phone.length !== 10) {
             alert("Please enter a valid 10-digit phone number");
             setLoading(false);
             return;
         }
 
-        const email = currentUser?.email || 'guest@example.com';
-        const newOrderId = generateOrderId(formData.firstName);
-        const finalTotal = cartTotal + deliveryCharge;
-
         try {
+            const email = currentUser.email;
+            const newOrderId = generateOrderId(formData.fullName);
+            const finalTotal = cartTotal + deliveryCharge;
+
             const currentOrder = {
                 id: newOrderId,
-                userId: currentUser?.uid || 'guest',
+                userId: currentUser.uid,
                 email: email,
-                firstName: formData.firstName,
-                lastName: formData.lastName,
+                fullName: formData.fullName,
                 address: `${formData.address}, ${formData.area}`,
                 area: formData.area,
                 distance: deliveryDistance,
@@ -126,16 +139,8 @@ export default function Checkout() {
                 transactionId: null
             };
 
-            // Save to Firestore
             await setDoc(doc(db, 'orders', newOrderId), currentOrder);
 
-            // Save order ID to local storage for guest tracking
-            const existingOrders = JSON.parse(localStorage.getItem('myOrders') || '[]');
-            if (!existingOrders.includes(newOrderId)) {
-                localStorage.setItem('myOrders', JSON.stringify([newOrderId, ...existingOrders]));
-            }
-
-            // Success state locally
             setOrderSuccess(true);
             setOrderData(currentOrder);
             clearCart();
@@ -296,25 +301,25 @@ export default function Checkout() {
                     <div>
                         <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
                         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
-                            <div className="sm:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700">First name</label>
+                            <div className="sm:col-span-6">
+                                <label className="block text-sm font-medium text-gray-700">Full Name</label>
                                 <input
                                     type="text"
                                     required
-                                    value={formData.firstName}
-                                    onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
+                                    value={formData.fullName}
+                                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    placeholder="Enter your full name"
                                 />
                             </div>
 
-                            <div className="sm:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700">Last name</label>
+                            <div className="sm:col-span-6">
+                                <label className="block text-sm font-medium text-gray-700">Email Address (from account)</label>
                                 <input
-                                    type="text"
-                                    required
-                                    value={formData.lastName}
-                                    onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    type="email"
+                                    disabled
+                                    value={currentUser?.email || ''}
+                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed"
                                 />
                             </div>
 
