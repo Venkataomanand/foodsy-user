@@ -586,17 +586,34 @@ export default function Admin() {
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div>
-                                        <label className="text-xs font-black uppercase text-gray-400 mb-1 block text-primary">Quantity Options</label>
+                                        <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Base Unit</label>
                                         <input
                                             type="text"
-                                            placeholder="e.g. 1kg, 500g, Half"
-                                            value={product.options}
-                                            onChange={e => setProduct({ ...product, options: e.target.value })}
-                                            className="w-full bg-primary/5 border border-primary/20 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                                            placeholder="e.g. 1kg"
+                                            value={product.unit}
+                                            onChange={e => setProduct({ ...product, unit: e.target.value })}
+                                            className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
                                         />
-                                        <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase px-1">Separate with commas</p>
                                     </div>
-                                    <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Emoji Icon</label><input type="text" value={product.emoji} onChange={e => setProduct({ ...product, emoji: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" /></div>
+                                    <div>
+                                        <label className="text-xs font-black uppercase text-gray-400 mb-1 block text-primary">Selectable Options</label>
+                                        <div className="relative">
+                                            <input
+                                                type="text"
+                                                placeholder="e.g. 1kg, 500g"
+                                                value={product.options}
+                                                onChange={e => setProduct({ ...product, options: e.target.value })}
+                                                className="w-full bg-primary/5 border border-primary/20 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                                            />
+                                            <p className="text-[9px] font-bold text-gray-400 mt-1 uppercase px-1">Comma separated</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-4">
+                                    <div className="flex-1">
+                                        <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Emoji Icon</label>
+                                        <input type="text" value={product.emoji} onChange={e => setProduct({ ...product, emoji: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold" />
+                                    </div>
                                 </div>
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Description</label><textarea rows={3} value={product.description} onChange={e => setProduct({ ...product, description: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-medium" placeholder="Tasty ingredients..." /></div>
                                 <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', unit: '', options: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
@@ -616,7 +633,7 @@ export default function Admin() {
                                             <div>
                                                 <h3 className="font-black text-gray-900">{prod.name}</h3>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                                                    {prod.category} • ₹{Number(prod.price || 0).toFixed(2)} {prod.options && ` [Options: ${prod.options}]`}
+                                                    {prod.category} • ₹{Number(prod.price || 0).toFixed(2)} {prod.options ? ` [Options: ${prod.options}]` : (prod.unit ? ` (${prod.unit})` : '')}
                                                     {prod.restaurantId && ` • ${restaurants.find(r => r.id === prod.restaurantId)?.name}`}
                                                 </p>
                                             </div>
@@ -725,7 +742,7 @@ export default function Admin() {
                                                     <div className="text-[9px] font-medium text-gray-400 line-clamp-1">{o.address}</div>
                                                 </td>
                                                 <td className="px-6 py-4 font-bold text-[10px] text-gray-500 max-w-[200px] truncate">
-                                                    {o.isCustom ? <span className="text-primary">{o.customList}</span> : o.items?.map(i => `${i.name}${i.selectedOption ? ` (${i.selectedOption})` : ''} x ${i.quantity}`).join(', ')}
+                                                    {o.isCustom ? <span className="text-primary">{o.customList}</span> : o.items?.map(i => `${i.name}${(i.selectedOption || i.unit) ? ` (${i.selectedOption || i.unit})` : ''} x ${i.quantity}`).join(', ')}
                                                 </td>
                                                 <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.total || 0).toFixed(2)}</td>
                                                 <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date} {o.time}</td>
