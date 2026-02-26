@@ -53,7 +53,7 @@ export default function Admin() {
     const [isEditingRestaurant, setIsEditingRestaurant] = useState(false);
     const [restaurantEditId, setRestaurantEditId] = useState(null);
     const [restaurantData, setRestaurantData] = useState({
-        name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: ''
+        name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', isOpen: true
     });
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -230,7 +230,7 @@ export default function Admin() {
                 });
                 alert('Restaurant Added!');
             }
-            setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '' });
+            setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', isOpen: true });
             setIsEditingRestaurant(false);
             setRestaurantEditId(null);
         } catch (error) {
@@ -256,7 +256,8 @@ export default function Admin() {
             image: res.image || '',
             rating: res.rating || '4.5',
             deliveryTime: res.deliveryTime || '30-40 min',
-            cuisine: res.cuisine || ''
+            cuisine: res.cuisine || '',
+            isOpen: res.isOpen !== false
         });
         setActiveTab('restaurants');
     };
@@ -775,12 +776,27 @@ export default function Admin() {
                                     <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Cuisine / Tags</label>
                                     <input type="text" placeholder="e.g. North Indian, Chinese" value={restaurantData.cuisine} onChange={e => setRestaurantData({ ...restaurantData, cuisine: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" />
                                 </div>
+                                <div className="flex items-center justify-between p-4 bg-gray-50 rounded-2xl border border-gray-100">
+                                    <div className="flex flex-col">
+                                        <span className="text-[10px] font-black uppercase text-gray-400">Availability</span>
+                                        <span className={`text-xs font-black ${restaurantData.isOpen ? 'text-green-600' : 'text-red-600'}`}>
+                                            Restaurant is {restaurantData.isOpen ? 'OPEN' : 'CLOSED'}
+                                        </span>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setRestaurantData({ ...restaurantData, isOpen: !restaurantData.isOpen })}
+                                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${restaurantData.isOpen ? 'bg-primary' : 'bg-gray-300'}`}
+                                    >
+                                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${restaurantData.isOpen ? 'translate-x-6' : 'translate-x-1'}`} />
+                                    </button>
+                                </div>
                                 <div className="flex gap-3">
                                     <button type="submit" className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all shadow-lg">
                                         {isEditingRestaurant ? 'Update Restaurant' : 'Add Restaurant'}
                                     </button>
                                     {isEditingRestaurant && (
-                                        <button type="button" onClick={() => { setIsEditingRestaurant(false); setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">
+                                        <button type="button" onClick={() => { setIsEditingRestaurant(false); setRestaurantEditId(null); setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', isOpen: true }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">
                                             Cancel
                                         </button>
                                     )}

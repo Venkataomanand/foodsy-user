@@ -2,10 +2,11 @@ import { useState, useEffect } from 'react';
 import Hero from '../components/Hero';
 import ProductCard from '../components/ProductCard';
 import { useNavigate, Link } from 'react-router-dom';
-import { Tag } from 'lucide-react';
+import { Tag, AlertCircle } from 'lucide-react';
 import { db } from '../firebase';
 import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import { useProduct } from '../context/ProductContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 
 const CATEGORY_GROUPS = [
@@ -51,6 +52,7 @@ const CATEGORY_GROUPS = [
 
 export default function Home() {
     const { currentUser } = useAuth();
+    const { storeOpen } = useProduct();
     const [offers, setOffers] = useState([]);
 
     useEffect(() => {
@@ -90,6 +92,21 @@ export default function Home() {
     return (
         <div className="space-y-12 pb-20">
             <Hero />
+
+            {/* Global Store Closed Banner */}
+            {storeOpen === false && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                    <div className="bg-red-50 border-2 border-red-100 rounded-[3xl] p-6 flex flex-col md:flex-row items-center gap-4 shadow-xl shadow-red-100/20 text-center md:text-left">
+                        <div className="bg-red-500 p-3 rounded-2xl text-white shadow-lg flex-shrink-0">
+                            <AlertCircle className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-red-900">Store is Currently Offline</h2>
+                            <p className="text-red-600 font-bold text-sm">We are not accepting orders at this moment. Please check back later!</p>
+                        </div>
+                    </div>
+                </div>
+            )}
 
 
             {/* Offers for you section */}
