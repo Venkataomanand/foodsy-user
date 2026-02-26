@@ -11,7 +11,8 @@ export default function ProductCard({ product }) {
     const isBeverageCombo = product.name.toLowerCase().includes('beverage');
     const isMilkshakeCombo = product.name.toLowerCase().includes('milkshake');
 
-    const needsOptions = isBeverageCombo || isMilkshakeCombo;
+    const hasOptions = product.options && String(product.options).trim().length > 0;
+    const needsOptions = isBeverageCombo || isMilkshakeCombo || hasOptions;
 
     const beverageOptions = ['Coke', 'Sprite', 'Thums Up'];
     const milkshakeOptions = ['Chocolate', 'Vanilla', 'Strawberry'];
@@ -19,8 +20,9 @@ export default function ProductCard({ product }) {
     let options = [];
     if (isBeverageCombo) options = beverageOptions;
     else if (isMilkshakeCombo) options = milkshakeOptions;
+    else if (hasOptions) options = product.options.split(',').map(opt => opt.trim());
 
-    const optionLabel = isBeverageCombo ? 'Beverage' : 'Shake';
+    const optionLabel = isBeverageCombo ? 'Beverage' : (isMilkshakeCombo ? 'Shake' : 'Quantity');
 
     // Get all variants of this product in cart
     const productVariants = cartItems.filter(item => item.id === product.id);
@@ -103,6 +105,7 @@ export default function ProductCard({ product }) {
 
                 <div className="flex justify-between items-start mb-1">
                     <h3 className="text-lg font-bold text-gray-900 group-hover:text-primary transition-colors line-clamp-1">{product.name}</h3>
+                    {product.unit && <span className="text-[10px] font-black bg-gray-100 text-gray-500 px-2 py-0.5 rounded-md uppercase tracking-wider">{product.unit}</span>}
                 </div>
 
                 <p className="text-xs text-gray-500 mb-2">{product.category}</p>
