@@ -725,7 +725,7 @@ export default function Admin() {
                                                     <div className="text-[9px] font-medium text-gray-400 line-clamp-1">{o.address}</div>
                                                 </td>
                                                 <td className="px-6 py-4 font-bold text-[10px] text-gray-500 max-w-[200px] truncate">
-                                                    {o.isCustom ? <span className="text-primary">{o.customList}</span> : o.items?.map(i => `${i.name}x${i.quantity}`).join(', ')}
+                                                    {o.isCustom ? <span className="text-primary">{o.customList}</span> : o.items?.map(i => `${i.name}${i.selectedOption ? ` (${i.selectedOption})` : ''} x ${i.quantity}`).join(', ')}
                                                 </td>
                                                 <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.total || 0).toFixed(2)}</td>
                                                 <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date} {o.time}</td>
