@@ -53,7 +53,7 @@ export default function Admin() {
     const [isEditingRestaurant, setIsEditingRestaurant] = useState(false);
     const [restaurantEditId, setRestaurantEditId] = useState(null);
     const [restaurantData, setRestaurantData] = useState({
-        name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', isOpen: true
+        name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', address: '', isOpen: true
     });
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -230,7 +230,7 @@ export default function Admin() {
                 });
                 alert('Restaurant Added!');
             }
-            setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', isOpen: true });
+            setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', address: '', isOpen: true });
             setIsEditingRestaurant(false);
             setRestaurantEditId(null);
         } catch (error) {
@@ -257,6 +257,7 @@ export default function Admin() {
             rating: res.rating || '4.5',
             deliveryTime: res.deliveryTime || '30-40 min',
             cuisine: res.cuisine || '',
+            address: res.address || '',
             isOpen: res.isOpen !== false
         });
         setActiveTab('restaurants');
@@ -773,6 +774,10 @@ export default function Admin() {
                                     </div>
                                 </div>
                                 <div>
+                                    <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Address</label>
+                                    <textarea rows="2" value={restaurantData.address} onChange={e => setRestaurantData({ ...restaurantData, address: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" placeholder="e.g. 1-23, Main Road, Kakinada" />
+                                </div>
+                                <div>
                                     <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Cuisine / Tags</label>
                                     <input type="text" placeholder="e.g. North Indian, Chinese" value={restaurantData.cuisine} onChange={e => setRestaurantData({ ...restaurantData, cuisine: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" />
                                 </div>
@@ -796,7 +801,7 @@ export default function Admin() {
                                         {isEditingRestaurant ? 'Update Restaurant' : 'Add Restaurant'}
                                     </button>
                                     {isEditingRestaurant && (
-                                        <button type="button" onClick={() => { setIsEditingRestaurant(false); setRestaurantEditId(null); setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', isOpen: true }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">
+                                        <button type="button" onClick={() => { setIsEditingRestaurant(false); setRestaurantEditId(null); setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '', address: '', isOpen: true }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">
                                             Cancel
                                         </button>
                                     )}
@@ -852,7 +857,8 @@ export default function Admin() {
                                             </div>
                                             <div className="p-4">
                                                 <h4 className="font-black text-gray-900">{res.name}</h4>
-                                                <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">{res.cuisine || 'Multi-cuisine'}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase mb-1">{res.cuisine || 'Multi-cuisine'}</p>
+                                                <p className="text-[9px] font-medium text-gray-400 line-clamp-1 mb-2">{res.address || 'No address added'}</p>
                                                 <div className="flex items-center justify-between mb-3">
                                                     <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md text-[10px] font-black">⭐ {res.rating}</span>
                                                     <span className="text-[10px] font-bold text-gray-500">🕒 {res.deliveryTime}</span>

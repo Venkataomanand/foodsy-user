@@ -158,10 +158,12 @@ export default function Products() {
                                 <Clock className="h-4 w-4 text-gray-400" />
                                 <span className="font-black text-sm">{currentRestaurant.deliveryTime || '30-40 min'}</span>
                             </div>
-                            <div className="flex items-center space-x-2 bg-gray-50 text-gray-600 px-4 py-2 rounded-2xl border border-gray-100">
-                                <MapPin className="h-4 w-4 text-gray-400" />
-                                <span className="font-black text-sm">JNTUK, Kakinada</span>
-                            </div>
+                            {currentRestaurant.address && (
+                                <div className="flex items-center space-x-2 bg-gray-50 text-gray-600 px-4 py-2 rounded-2xl border border-gray-100">
+                                    <MapPin className="h-4 w-4 text-gray-400" />
+                                    <span className="font-black text-sm">{currentRestaurant.address}</span>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

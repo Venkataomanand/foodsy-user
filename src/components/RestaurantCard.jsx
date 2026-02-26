@@ -1,4 +1,4 @@
-import { Star, Clock } from 'lucide-react';
+import { Star, Clock, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 export default function RestaurantCard({ restaurant }) {
@@ -35,11 +35,17 @@ export default function RestaurantCard({ restaurant }) {
             <div>
                 <h3 className="text-xl font-black text-gray-900 group-hover:text-primary transition-colors leading-tight mb-1">{restaurant.name}</h3>
                 <p className="text-sm font-bold text-gray-400 line-clamp-1 mb-2 capitalize">{restaurant.cuisine || 'North Indian • Biryani • Chinese'}</p>
-                <div className="flex items-center space-x-4">
-                    <div className="flex items-center text-xs font-bold text-gray-500 bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100">
-                        <Clock className="h-3.5 w-3.5 mr-1.5 text-gray-400" />
+                <div className="flex flex-wrap gap-2 items-center">
+                    <div className="flex items-center text-[10px] font-black text-gray-500 bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100">
+                        <Clock className="h-3.5 w-3.5 mr-1.5 text-primary" />
                         <span>{restaurant.deliveryTime || '30-40 min'}</span>
                     </div>
+                    {restaurant.address && (
+                        <div className="flex items-center text-[10px] font-black text-gray-400 bg-gray-50 px-2 py-1.5 rounded-lg border border-gray-100 max-w-[150px]">
+                            <MapPin className="h-3 w-3 mr-1 text-gray-400" />
+                            <span className="truncate">{restaurant.address}</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
