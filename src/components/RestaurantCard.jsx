@@ -17,10 +17,14 @@ export default function RestaurantCard({ restaurant }) {
                 />
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-gray-900 via-gray-900/40 to-transparent p-4">
                     <div className="flex items-center justify-between">
-                        <span className="bg-primary text-white text-[10px] font-black px-2 py-1 rounded-lg uppercase tracking-wider shadow-lg">Featured</span>
-                        <div className="flex items-center space-x-1 bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-black shadow-lg">
-                            <Star className="h-3 w-3 fill-white" />
-                            <span>{restaurant.rating || '4.5'}</span>
+                        <div className="flex items-center space-x-2">
+                            <div className={`px-2 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider shadow-lg ${restaurant.isOpen !== false ? 'bg-green-500 text-white' : 'bg-red-600 text-white animate-pulse'}`}>
+                                {restaurant.isOpen !== false ? 'Open' : 'Closed'}
+                            </div>
+                            <div className="flex items-center space-x-1 bg-white/20 backdrop-blur-md text-white px-2 py-1 rounded-lg text-xs font-black">
+                                <Star className="h-3 w-3 fill-white" />
+                                <span>{restaurant.rating || '4.5'}</span>
+                            </div>
                         </div>
                     </div>
                 </div>

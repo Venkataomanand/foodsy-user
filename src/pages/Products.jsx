@@ -234,7 +234,7 @@ export default function Products() {
             </div>
 
             {/* Restaurants Strip — shown when browsing Food or All, no restaurant selected */}
-            {!restaurantId && (activeMainCategory === 'Food' || activeMainCategory === 'All') && restaurants.filter(r => r.isOpen !== false).length > 0 && (
+            {!restaurantId && (activeMainCategory === 'Food' || activeMainCategory === 'All') && restaurants.length > 0 && (
                 <div className="mb-10">
                     <div className="flex items-center gap-2 mb-5">
                         <Building className="h-6 w-6 text-primary" />
@@ -244,7 +244,7 @@ export default function Products() {
                         </div>
                     </div>
                     <div className="flex overflow-x-auto pb-4 -mx-4 px-4 sm:mx-0 sm:px-0 scrollbar-hide gap-5">
-                        {restaurants.filter(r => r.isOpen !== false).map(res => (
+                        {restaurants.map(res => (
                             <RestaurantCard key={res.id} restaurant={res} />
                         ))}
                     </div>
