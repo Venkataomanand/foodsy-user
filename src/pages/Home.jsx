@@ -1,30 +1,73 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Hero from '../components/Hero';
 import ProductCard from '../components/ProductCard';
 import { useNavigate, Link } from 'react-router-dom';
+import { Tag, AlertCircle } from 'lucide-react';
 import { db } from '../firebase';
-import { collection, addDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { useAuth } from '../context/AuthContext';
+import { useProduct } from '../context/ProductContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 
-const CATEGORIES = [
-    { name: 'Biryani', icon: '🍚', color: 'bg-orange-100', link: '/products?category=food' },
-    { name: 'Burgers', icon: '🍔', color: 'bg-red-100', link: '/products?category=food' },
-    { name: 'Grocery', icon: '🛒', color: 'bg-green-100', link: '/products?category=grocery' },
-    { name: 'Veggies', icon: '🥦', color: 'bg-emerald-100', link: '/products?category=vegetables' },
-    { name: 'Combos', icon: '🎁', color: 'bg-yellow-100', link: '/products?category=combos' },
-    { name: 'Desserts', icon: '🍰', color: 'bg-pink-100', link: '/products?category=food' },
+const CATEGORY_GROUPS = [
+    {
+        title: "Delicious Food",
+        subtitle: "Biryanis, Pulavs, Desserts & more",
+        items: [
+            { name: 'Biryanis', icon: '🍛', color: 'bg-orange-50', link: '/products?category=biryanis' },
+            { name: 'Tiffins', icon: '🥗', color: 'bg-lime-50', link: '/products?category=tiffins' },
+            { name: 'Pulavs', icon: '🥘', color: 'bg-yellow-50', link: '/products?category=pulavs' },
+            { name: 'Desserts', icon: '🍰', color: 'bg-pink-50', link: '/products?category=desserts' },
+            { name: 'Milkshakes', icon: '🥤', color: 'bg-purple-50', link: '/products?category=milkshakes' },
+            { name: 'Beverages', icon: '🍹', color: 'bg-cyan-50', link: '/products?category=beverages' },
+        ]
+    },
+    {
+        title: "Fresh Vegetables",
+        subtitle: "Farm fresh fruits and greens",
+        items: [
+            { name: 'Fruits', icon: '🍎', color: 'bg-red-50', link: '/products?category=fruits' },
+            { name: 'Leafy Veg', icon: '🥬', color: 'bg-emerald-50', link: '/products?category=green leafy vegetables' },
+            { name: 'Vegetables', icon: '🥦', color: 'bg-green-50', link: '/products?category=vegetables' },
+        ]
+    },
+    {
+        title: "Daily Grocery",
+        subtitle: "Essentials delivered to your door",
+        items: [
+            { name: 'Rice & Dals', icon: '🌾', color: 'bg-amber-50', link: '/products?category=rice & dals' },
+            { name: 'Oils & Spices', icon: '🍯', color: 'bg-yellow-100', link: '/products?category=oils & spices' },
+            { name: 'Snacks', icon: '🍟', color: 'bg-orange-100', link: '/products?category=snacks & drinks' },
+            { name: 'Essentials', icon: '🥚', color: 'bg-blue-50', link: '/products?category=essentials' },
+        ]
+    },
+    {
+        title: "Special Deals",
+        subtitle: "Save more with our combos",
+        items: [
+            { name: 'Combos', icon: '🎁', color: 'bg-indigo-50', link: '/products?category=combos' },
+        ]
+    }
 ];
 
 export default function Home() {
     const { currentUser } = useAuth();
+    const { storeOpen } = useProduct();
+    const [offers, setOffers] = useState([]);
+
+    useEffect(() => {
+        const q = query(collection(db, 'offers'), orderBy('createdAt', 'desc'));
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            setOffers(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        });
+        return () => unsubscribe();
+    }, []);
 
     const handleCustomOrder = async () => {
         const list = prompt("What do you want us to bring? (e.g. Milk, Eggs, Bread)");
         if (!list) return;
 
         try {
-            // 1. Save to Firestore
             await addDoc(collection(db, 'orders'), {
                 email: currentUser?.email || 'guest@example.com',
                 isCustom: true,
@@ -35,10 +78,7 @@ export default function Home() {
                 createdAt: serverTimestamp()
             });
 
-            // 2. Alert user
             alert("List submitted successfully! Redirecting to WhatsApp for confirmation...");
-
-            // 3. Open WhatsApp
             const message = `hai foodsy! I have submitted this list on the website: ${list}`;
             window.open(`https://wa.me/918143938358?text=${encodeURIComponent(message)}`, '_blank');
         } catch (error) {
@@ -53,20 +93,104 @@ export default function Home() {
         <div className="space-y-12 pb-20">
             <Hero />
 
-            {/* Menu Section */}
+            {/* Global Store Closed Banner */}
+            {storeOpen === false && (
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-8">
+                    <div className="bg-red-50 border-2 border-red-100 rounded-[3xl] p-6 flex flex-col md:flex-row items-center gap-4 shadow-xl shadow-red-100/20 text-center md:text-left">
+                        <div className="bg-red-500 p-3 rounded-2xl text-white shadow-lg flex-shrink-0">
+                            <AlertCircle className="h-6 w-6" />
+                        </div>
+                        <div>
+                            <h2 className="text-xl font-black text-red-900">Store is Currently Offline</h2>
+                            <p className="text-red-600 font-bold text-sm">We are not accepting orders at this moment. Please check back later!</p>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+
+            {/* Offers for you section */}
+            {offers.length > 0 && (
+                <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
+                    <div className="flex items-center space-x-2 mb-6">
+                        <Tag className="h-6 w-6 text-primary" />
+                        <h2 className="text-2xl font-black text-gray-900">Best Offers for you</h2>
+                    </div>
+                    <div className="flex overflow-x-auto pb-6 scrollbar-hide space-x-6">
+                        {offers.map((offer) => (
+                            <div
+                                key={offer.id}
+                                className="flex-shrink-0 w-[280px] md:w-[350px] bg-gradient-to-br from-gray-900 to-gray-800 rounded-3xl p-6 text-white relative overflow-hidden group shadow-xl shadow-gray-200"
+                            >
+                                <div className="absolute -right-4 -bottom-4 text-8xl opacity-10 rotate-12 transition-transform group-hover:scale-110">
+                                    {offer.emoji || '🔥'}
+                                </div>
+                                <div className="relative z-10">
+                                    <div className="text-primary font-black text-sm uppercase tracking-wider mb-2">Exclusive Offer</div>
+                                    <h3 className="text-2xl font-black mb-2 leading-tight">{offer.title}</h3>
+                                    <p className="text-gray-400 text-sm font-medium mb-4">{offer.description}</p>
+                                    {offer.code && (
+                                        <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-md px-4 py-2 rounded-xl border border-white/10 group/code cursor-pointer hover:bg-white/20 transition-all">
+                                            <span className="text-[10px] font-black uppercase text-gray-400">Code:</span>
+                                            <span className="text-sm font-black text-primary tracking-widest">{offer.code}</span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* Food Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-                <h2 className="text-2xl md:text-3xl font-black text-gray-900 mb-8 font-black uppercase tracking-tight">Explore Our Menu</h2>
-                <div className="flex overflow-x-auto pb-6 scrollbar-hide space-x-6 md:grid md:grid-cols-6 md:space-x-0 md:gap-8">
-                    {CATEGORIES.map((cat) => (
-                        <Link
-                            key={cat.name}
-                            to={cat.link}
-                            className="flex-shrink-0 flex flex-col items-center group transition-transform hover:scale-110"
-                        >
-                            <div className={`w-20 h-20 md:w-28 md:h-28 ${cat.color} rounded-full flex items-center justify-center text-4xl md:text-5xl shadow-sm group-hover:shadow-lg transition-all duration-300 ring-2 ring-transparent group-hover:ring-primary/20`}>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Our Menu</h2>
+                    <Link to="/products" className="text-primary font-bold text-sm hover:underline italic">View Full Menu</Link>
+                </div>
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
+                    {CATEGORY_GROUPS[0].items.map((cat) => (
+                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
                                 {cat.icon}
                             </div>
-                            <span className="mt-4 text-sm md:text-base font-bold text-gray-700 group-hover:text-primary transition-colors">{cat.name}</span>
+                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+
+            {/* Vegetables Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Fresh Vegetables</h2>
+                    <Link to="/products?category=vegetables" className="text-primary font-bold text-sm hover:underline italic">View All Veggies</Link>
+                </div>
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
+                    {CATEGORY_GROUPS[1].items.map((cat) => (
+                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
+                                {cat.icon}
+                            </div>
+                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
+                        </Link>
+                    ))}
+                </div>
+            </section>
+
+            {/* Grocery Section */}
+            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Daily Grocery</h2>
+                    <Link to="/products?category=grocery" className="text-primary font-bold text-sm hover:underline italic">View All Grocery</Link>
+                </div>
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
+                    {CATEGORY_GROUPS[2].items.map((cat) => (
+                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
+                                {cat.icon}
+                            </div>
+                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
                         </Link>
                     ))}
                 </div>

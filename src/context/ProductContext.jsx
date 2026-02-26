@@ -25,7 +25,11 @@ export function ProductProvider({ children }) {
     useEffect(() => {
         const qProducts = query(collection(db, 'products'), orderBy('category'));
         const unsubProducts = onSnapshot(qProducts, (snapshot) => {
-            setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const productsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setProducts(productsData);
             setLoading(false);
         });
 
@@ -54,12 +58,29 @@ export function ProductProvider({ children }) {
         return deleteDoc(productRef);
     }
 
+    async function addRestaurant(restaurant) {
+        return addDoc(collection(db, 'restaurants'), restaurant);
+    }
+
+    async function updateRestaurant(id, updates) {
+        const restaurantRef = doc(db, 'restaurants', id);
+        return updateDoc(restaurantRef, updates);
+    }
+
+    async function deleteRestaurant(id) {
+        const restaurantRef = doc(db, 'restaurants', id);
+        return deleteDoc(restaurantRef);
+    }
+
     const value = {
         products,
         restaurants,
         addProduct,
         updateProduct,
         deleteProduct,
+        addRestaurant,
+        updateRestaurant,
+        deleteRestaurant,
         loading
     };
 
