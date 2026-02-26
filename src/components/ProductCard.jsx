@@ -11,7 +11,8 @@ export default function ProductCard({ product }) {
     const isBeverageCombo = product.name.toLowerCase().includes('beverage');
     const isMilkshakeCombo = product.name.toLowerCase().includes('milkshake');
 
-    const needsOptions = isBeverageCombo || isMilkshakeCombo;
+    const hasOptions = product.options && String(product.options).trim().length > 0;
+    const needsOptions = isBeverageCombo || isMilkshakeCombo || hasOptions;
 
     const beverageOptions = ['Coke', 'Sprite', 'Thums Up'];
     const milkshakeOptions = ['Chocolate', 'Vanilla', 'Strawberry'];
@@ -19,8 +20,9 @@ export default function ProductCard({ product }) {
     let options = [];
     if (isBeverageCombo) options = beverageOptions;
     else if (isMilkshakeCombo) options = milkshakeOptions;
+    else if (hasOptions) options = product.options.split(',').map(opt => opt.trim());
 
-    const optionLabel = isBeverageCombo ? 'Beverage' : 'Shake';
+    const optionLabel = isBeverageCombo ? 'Beverage' : (isMilkshakeCombo ? 'Shake' : 'Quantity');
 
     // Get all variants of this product in cart
     const productVariants = cartItems.filter(item => item.id === product.id);
