@@ -128,8 +128,8 @@ export default function Home() {
             {/* Food Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
                 <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-black text-gray-900">Food Menu</h2>
-                    <Link to="/products?category=food" className="text-primary font-bold text-sm hover:underline italic">View All Food</Link>
+                    <h2 className="text-2xl font-black text-gray-900">Our Menu</h2>
+                    <Link to="/products" className="text-primary font-bold text-sm hover:underline italic">View Full Menu</Link>
                 </div>
                 <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
                     {CATEGORY_GROUPS[0].items.map((cat) => (

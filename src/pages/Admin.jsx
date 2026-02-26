@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProduct } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
-import { Pencil, Trash2, Plus, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag } from 'lucide-react';
+import { Pencil, Trash2, Plus, PlusCircle, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag, Utensils, Building } from 'lucide-react';
 import { db, storage } from '../firebase';
 import {
     collection,
@@ -19,18 +19,18 @@ import {
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 const MOCK_DATA = [
-    { name: "Chicken Biryani", category: "Biryanis", price: 150, description: "Legendary Hyderabadi style biryani with perfectly cooked chicken.", emoji: "🍛", rating: 4.9 },
+    { name: "Chicken Biryani", category: "Biryanis", price: 150, description: "Legendary Hyderabadi style biryani with perfectly cooked chicken.", emoji: "�", rating: 4.9 },
     { name: "Family Pulav", category: "Pulavs", price: 350, description: "Deluxe pulav served with raita and spicy curry.", emoji: "🥘", rating: 4.8 },
     { name: "Fresh Apple", category: "Fruits", price: 120, description: "Crunchy and sweet Kashmiri apples.", emoji: "🍎", rating: 4.7 },
-    { name: "Spinach (Palak)", category: "Green Leafy Vegetables", price: 30, description: "Fresh farm-picked organic spinach.", emoji: "🥬", rating: 4.9 },
+    { name: "Spinach (Palak)", category: "Green Leafy Vegetables", price: 30, description: "Fresh farm-picked organic spinach.", emoji: "�", rating: 4.9 },
     { name: "Carrot", category: "Vegetables", price: 40, description: "Fresh and sweet carrots.", emoji: "🥕", rating: 4.5 },
     { name: "Basmati Rice 5kg", category: "Rice & Dals", price: 450, description: "Premium long grain basmati rice.", emoji: "🍚", rating: 4.8 },
-    { name: "Gulab Jamun", category: "Desserts", price: 80, description: "Soft and juicy milk-based sweets.", emoji: "🍬", rating: 4.9 },
+    { name: "Gulab Jamun", category: "Desserts", price: 80, description: "Soft and juicy milk-based sweets.", emoji: "�", rating: 4.9 },
     { name: "Cool Drink", category: "Beverages", price: 40, description: "Chilled soft drink.", emoji: "🥤", rating: 4.4 },
 ];
 
 export default function Admin() {
-    const { products, addProduct, updateProduct, deleteProduct, loading } = useProduct();
+    const { products, addProduct, updateProduct, deleteProduct, restaurants, addRestaurant, updateRestaurant, deleteRestaurant, loading } = useProduct();
     const { currentUser } = useAuth();
     const [activeTab, setActiveTab] = useState('products');
     const [orders, setOrders] = useState([]);
@@ -46,7 +46,14 @@ export default function Admin() {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [product, setProduct] = useState({
-        name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: ''
+        name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', restaurantId: ''
+    });
+
+    // Restaurant Form State
+    const [isEditingRestaurant, setIsEditingRestaurant] = useState(false);
+    const [restaurantEditId, setRestaurantEditId] = useState(null);
+    const [restaurantData, setRestaurantData] = useState({
+        name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: ''
     });
     const [imageFile, setImageFile] = useState(null);
     const [uploading, setUploading] = useState(false);
@@ -203,6 +210,53 @@ export default function Admin() {
         }
     };
 
+    const handleAddRestaurant = async (e) => {
+        e.preventDefault();
+        try {
+            if (isEditingRestaurant) {
+                await updateRestaurant(restaurantEditId, {
+                    ...restaurantData,
+                    updatedAt: serverTimestamp()
+                });
+                alert('Restaurant Updated!');
+            } else {
+                await addRestaurant({
+                    ...restaurantData,
+                    createdAt: serverTimestamp()
+                });
+                alert('Restaurant Added!');
+            }
+            setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '' });
+            setIsEditingRestaurant(false);
+            setRestaurantEditId(null);
+        } catch (error) {
+            console.error("Error saving restaurant:", error);
+            alert("Failed to save restaurant");
+        }
+    };
+
+    const handleAddItemsToRestaurant = (res) => {
+        // Switch to products tab and pre-fill the restaurantId
+        setActiveTab('products');
+        setIsEditing(false);
+        setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', restaurantId: res.id });
+        // Scroll to top so the form is visible
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const handleEditRestaurant = (res) => {
+        setIsEditingRestaurant(true);
+        setRestaurantEditId(res.id);
+        setRestaurantData({
+            name: res.name,
+            image: res.image || '',
+            rating: res.rating || '4.5',
+            deliveryTime: res.deliveryTime || '30-40 min',
+            cuisine: res.cuisine || ''
+        });
+        setActiveTab('restaurants');
+    };
+
     const handleStatusChange = async (orderId, newStatus) => {
         try {
             const orderRef = firestoreDoc(db, 'orders', orderId);
@@ -323,6 +377,7 @@ export default function Admin() {
                 emoji: String(product.emoji || "🥑"),
                 image: imageUrl || "",
                 unit: String(product.unit || "").trim(),
+                restaurantId: product.restaurantId || "",
                 available: product.available !== undefined ? product.available : true,
                 updatedAt: serverTimestamp()
             };
@@ -344,7 +399,7 @@ export default function Admin() {
             alert(`Item ${isEditing ? 'Updated' : 'Added'} Successfully!`);
 
             // 4. Reset Form
-            setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', image: '', unit: '' });
+            setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', restaurantId: '' });
             setImageFile(null);
             setUploadProgress(0);
             setIsEditing(false);
@@ -373,7 +428,8 @@ export default function Admin() {
             description: prod.description,
             emoji: prod.emoji || '🥑',
             image: prod.image || '',
-            unit: prod.unit || ''
+            unit: prod.unit || '',
+            restaurantId: prod.restaurantId || ''
         });
     };
 
@@ -432,8 +488,9 @@ export default function Admin() {
             </div>
 
             <div className="flex overflow-x-auto space-x-4 mb-8 pb-2">
-                <button onClick={() => { setActiveTab('products'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
-                <button onClick={() => { setActiveTab('combos'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Combos', description: '', emoji: '🎁', image: '', unit: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'combos' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><span className="mr-2">🎁</span> Combos</button>
+                <button onClick={() => { setActiveTab('products'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', restaurantId: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
+                <button onClick={() => setActiveTab('restaurants')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'restaurants' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Building className="h-5 w-5 mr-2" /> Restaurants</button>
+                <button onClick={() => { setActiveTab('combos'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Combos', description: '', emoji: '🎁', image: '', unit: '', restaurantId: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'combos' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><span className="mr-2">🎁</span> Combos</button>
                 <button onClick={() => setActiveTab('offers')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'offers' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Tag className="h-5 w-5 mr-2" /> Offers</button>
                 <button onClick={() => setActiveTab('orders')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'orders' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><ShoppingBag className="h-5 w-5 mr-2" /> Orders</button>
                 <button onClick={() => setActiveTab('shorts')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'shorts' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Play className="h-5 w-5 mr-2" /> Shorts</button>
@@ -443,7 +500,24 @@ export default function Admin() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                     <div className="lg:col-span-1">
                         <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl p-6 border border-gray-100">
-                            <h2 className="text-xl font-black mb-6 flex items-center">{isEditing ? <Pencil className="h-5 w-5 mr-2 text-primary" /> : <Plus className="h-5 w-5 mr-2 text-primary" />}{isEditing ? 'Update Item' : 'Add New Item'}</h2>
+                            <h2 className="text-xl font-black mb-4 flex items-center">{isEditing ? <Pencil className="h-5 w-5 mr-2 text-primary" /> : <Plus className="h-5 w-5 mr-2 text-primary" />}{isEditing ? 'Update Item' : 'Add New Item'}</h2>
+                            {/* Restaurant context banner */}
+                            {product.restaurantId && (
+                                <div className="mb-4 flex items-center gap-2 bg-primary/5 border border-primary/20 rounded-2xl px-4 py-3">
+                                    <Building className="h-4 w-4 text-primary flex-shrink-0" />
+                                    <div className="min-w-0">
+                                        <p className="text-[10px] font-black uppercase text-gray-400 tracking-wider">Adding items for</p>
+                                        <p className="text-sm font-black text-primary truncate">{restaurants.find(r => r.id === product.restaurantId)?.name || 'Selected Restaurant'}</p>
+                                    </div>
+                                    <button
+                                        type="button"
+                                        onClick={() => setProduct({ ...product, restaurantId: '' })}
+                                        className="ml-auto text-gray-400 hover:text-red-500 transition-colors text-xs font-bold flex-shrink-0"
+                                    >
+                                        ✕ Clear
+                                    </button>
+                                </div>
+                            )}
                             <form onSubmit={handleSubmit} className="space-y-4">
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Item Name</label><input type="text" required value={product.name} onChange={e => setProduct({ ...product, name: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" placeholder="e.g. Chicken Biryani" /></div>
                                 <div>
@@ -474,6 +548,7 @@ export default function Admin() {
                                             <option value="Desserts">Desserts</option>
                                             <option value="Milkshakes">Milkshakes</option>
                                             <option value="Beverages">Beverages</option>
+                                            <option value="Tiffins">Tiffins</option>
                                         </optgroup>
                                         <optgroup label="Vegetables">
                                             <option value="Fruits">Fruits</option>
@@ -487,6 +562,19 @@ export default function Admin() {
                                             <option value="Essentials">Essentials</option>
                                         </optgroup>
                                     </select>}</div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Restaurant (Optional)</label>
+                                    <select
+                                        value={product.restaurantId}
+                                        onChange={e => setProduct({ ...product, restaurantId: e.target.value })}
+                                        className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                                    >
+                                        <option value="">No Specific Restaurant</option>
+                                        {restaurants.map(res => (
+                                            <option key={res.id} value={res.id}>{res.name}</option>
+                                        ))}
+                                    </select>
                                 </div>
                                 <div className="grid grid-cols-2 gap-4">
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Unit/Quantity</label><input type="text" placeholder="e.g. 1kg, 500g, 1pc" value={product.unit} onChange={e => setProduct({ ...product, unit: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" /></div>
@@ -503,8 +591,29 @@ export default function Admin() {
                             <ul className="divide-y divide-gray-50">
                                 {products.filter(p => activeTab === 'combos' ? p.category === 'Combos' : p.category !== 'Combos').map((prod) => (
                                     <li key={prod.id} className="p-6 hover:bg-gray-50/50 transition-all flex justify-between items-center group">
-                                        <div className="flex items-center"><div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-3xl mr-4 group-hover:scale-110 transition-transform">{prod.emoji || '🥘'}</div><div><h3 className="font-black text-gray-900">{prod.name}</h3><p className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{prod.category} • ₹{Number(prod.price || 0).toFixed(2)}</p></div></div>
-                                        <div className="flex gap-2"><button onClick={() => handleAvailabilityToggle(prod.id, prod.available !== false)} className={`p-2 rounded-xl transition-all ${prod.available !== false ? 'text-green-600 bg-green-50' : 'text-gray-400 bg-gray-50'}`}>{prod.available !== false ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}</button><button onClick={() => handleEdit(prod)} className="p-2 text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100"><Pencil className="h-5 w-5" /></button><button onClick={() => handleDelete(prod.id)} className="p-2 text-red-600 bg-red-50 rounded-xl hover:bg-red-100"><Trash2 className="h-5 w-5" /></button></div>
+                                        <div className="flex items-center">
+                                            <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-3xl mr-4 group-hover:scale-110 transition-transform">
+                                                {prod.emoji || '🥘'}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-black text-gray-900">{prod.name}</h3>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
+                                                    {prod.category} • ₹{Number(prod.price || 0).toFixed(2)}
+                                                    {prod.restaurantId && ` • ${restaurants.find(r => r.id === prod.restaurantId)?.name}`}
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex gap-2">
+                                            <button onClick={() => handleAvailabilityToggle(prod.id, prod.available !== false)} className={`p-2 rounded-xl transition-all ${prod.available !== false ? 'text-green-600 bg-green-50' : 'text-gray-400 bg-gray-50'}`}>
+                                                {prod.available !== false ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5" />}
+                                            </button>
+                                            <button onClick={() => handleEdit(prod)} className="p-2 text-blue-600 bg-blue-50 rounded-xl hover:bg-blue-100">
+                                                <Pencil className="h-5 w-5" />
+                                            </button>
+                                            <button onClick={() => handleDelete(prod.id)} className="p-2 text-red-600 bg-red-50 rounded-xl hover:bg-red-100">
+                                                <Trash2 className="h-5 w-5" />
+                                            </button>
+                                        </div>
                                     </li>
                                 ))}
                             </ul>
@@ -561,7 +670,7 @@ export default function Admin() {
                         </div>
                     </div>
                 </div>
-            ) : (
+            ) : activeTab === 'shorts' ? (
                 <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl p-6 border border-gray-100">
                     <h2 className="text-xl font-black mb-8 flex items-center"><Play className="h-6 w-6 mr-2 text-red-500 fill-red-500" /> Short Videos Manager</h2>
                     <form onSubmit={handleAddShort} className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-10">
@@ -578,7 +687,113 @@ export default function Admin() {
                         ))}
                     </div>
                 </div>
-            )}
+            ) : activeTab === 'restaurants' ? (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div className="lg:col-span-1">
+                        <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl p-6 border border-gray-100">
+                            <h2 className="text-xl font-black mb-6 flex items-center">
+                                <Building className="h-5 w-5 mr-2 text-primary" />
+                                {isEditingRestaurant ? 'Update Restaurant' : 'Add Restaurant'}
+                            </h2>
+                            <form onSubmit={handleAddRestaurant} className="space-y-4">
+                                <div>
+                                    <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Restaurant Name</label>
+                                    <input type="text" required value={restaurantData.name} onChange={e => setRestaurantData({ ...restaurantData, name: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" placeholder="e.g. Paradise Biryani" />
+                                </div>
+                                <div>
+                                    <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Image URL</label>
+                                    <input type="text" required value={restaurantData.image} onChange={e => setRestaurantData({ ...restaurantData, image: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" placeholder="Paste link here..." />
+                                </div>
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Rating</label>
+                                        <input type="text" value={restaurantData.rating} onChange={e => setRestaurantData({ ...restaurantData, rating: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" />
+                                    </div>
+                                    <div>
+                                        <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Delivery Time</label>
+                                        <input type="text" value={restaurantData.deliveryTime} onChange={e => setRestaurantData({ ...restaurantData, deliveryTime: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" />
+                                    </div>
+                                </div>
+                                <div>
+                                    <label className="text-xs font-black uppercase text-gray-400 mb-1 block">Cuisine / Tags</label>
+                                    <input type="text" placeholder="e.g. North Indian, Chinese" value={restaurantData.cuisine} onChange={e => setRestaurantData({ ...restaurantData, cuisine: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" />
+                                </div>
+                                <div className="flex gap-3">
+                                    <button type="submit" className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all shadow-lg">
+                                        {isEditingRestaurant ? 'Update Restaurant' : 'Add Restaurant'}
+                                    </button>
+                                    {isEditingRestaurant && (
+                                        <button type="button" onClick={() => { setIsEditingRestaurant(false); setRestaurantData({ name: '', image: '', rating: '4.5', deliveryTime: '30-40 min', cuisine: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">
+                                            Cancel
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                    <div className="lg:col-span-2">
+                        <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden border border-gray-100">
+                            <div className="p-6 border-b border-gray-50 flex justify-between items-center">
+                                <h2 className="text-xl font-black">All Restaurants</h2>
+                                <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-black uppercase">{restaurants.length} Total</span>
+                            </div>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-6">
+                                {restaurants.map(res => (
+                                    <div key={res.id} className="bg-gray-50 rounded-2xl overflow-hidden border border-gray-100 group">
+                                        <div className="relative h-32 w-full">
+                                            <img src={res.image || 'https://via.placeholder.com/400x200'} alt={res.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                            {/* Closed overlay */}
+                                            {res.isOpen === false && (
+                                                <div className="absolute inset-0 bg-gray-900/60 flex items-center justify-center">
+                                                    <span className="bg-red-600 text-white text-xs font-black px-3 py-1 rounded-full uppercase tracking-widest">Closed</span>
+                                                </div>
+                                            )}
+                                            <div className="absolute top-2 right-2 flex gap-1">
+                                                <button onClick={() => handleEditRestaurant(res)} className="p-2 bg-white/90 backdrop-blur-md rounded-lg text-blue-600 hover:bg-blue-600 hover:text-white transition-all shadow-sm"><Pencil className="h-4 w-4" /></button>
+                                                <button onClick={() => deleteRestaurant(res.id)} className="p-2 bg-white/90 backdrop-blur-md rounded-lg text-red-600 hover:bg-red-600 hover:text-white transition-all shadow-sm"><Trash2 className="h-4 w-4" /></button>
+                                            </div>
+                                            {/* ON/OFF Toggle */}
+                                            <div className="absolute top-2 left-2 flex items-center gap-1.5 bg-white/90 backdrop-blur-md px-2 py-1.5 rounded-lg shadow-sm">
+                                                <button
+                                                    onClick={() => updateRestaurant(res.id, { isOpen: res.isOpen === false ? true : false })}
+                                                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-colors ${res.isOpen !== false ? 'bg-green-500' : 'bg-gray-300'}`}
+                                                >
+                                                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow transition-transform ${res.isOpen !== false ? 'translate-x-4' : 'translate-x-1'}`} />
+                                                </button>
+                                                <span className={`text-[9px] font-black uppercase ${res.isOpen !== false ? 'text-green-600' : 'text-gray-400'}`}>
+                                                    {res.isOpen !== false ? 'Open' : 'Closed'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="p-4">
+                                            <h4 className="font-black text-gray-900">{res.name}</h4>
+                                            <p className="text-[10px] font-bold text-gray-400 uppercase mb-2">{res.cuisine || 'Multi-cuisine'}</p>
+                                            <div className="flex items-center justify-between mb-3">
+                                                <span className="bg-green-100 text-green-700 px-2 py-0.5 rounded-md text-[10px] font-black">⭐ {res.rating}</span>
+                                                <span className="text-[10px] font-bold text-gray-500">🕒 {res.deliveryTime}</span>
+                                            </div>
+                                            {/* Item count badge */}
+                                            <div className="flex items-center justify-between mb-3">
+                                                <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-1 rounded-lg">
+                                                    {products.filter(p => p.restaurantId === res.id).length} items linked
+                                                </span>
+                                            </div>
+                                            {/* Add Items Button */}
+                                            <button
+                                                onClick={() => handleAddItemsToRestaurant(res)}
+                                                className="w-full flex items-center justify-center gap-2 bg-gray-900 text-white text-xs font-black py-2.5 rounded-xl hover:bg-primary transition-all group/btn"
+                                            >
+                                                <PlusCircle className="h-4 w-4 group-hover/btn:rotate-90 transition-transform" />
+                                                Add Items to this Restaurant
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            ) : null}
         </div>
     );
 }

@@ -80,8 +80,17 @@ export default function Products() {
     }
 
     const filteredProducts = products.filter(product => {
-        // 0. Filter by Restaurant
-        if (restaurantId && product.restaurantId !== restaurantId) return false;
+        // 0. Filter by Restaurant (including on/off status)
+        if (product.restaurantId) {
+            const restaurant = restaurants.find(r => r.id === product.restaurantId);
+            // Hide product if restaurant exists but is closed
+            if (restaurant && restaurant.isOpen === false) return false;
+            // Also enforce restaurant matching if specific restaurantId filtered
+            if (restaurantId && product.restaurantId !== restaurantId) return false;
+        } else if (restaurantId) {
+            // If filtering by restaurant but product has none, hide it
+            return false;
+        }
 
         const productCat = product.category || '';
         const parentCat = getParentCategory(productCat);

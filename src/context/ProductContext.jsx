@@ -25,7 +25,11 @@ export function ProductProvider({ children }) {
     useEffect(() => {
         const qProducts = query(collection(db, 'products'), orderBy('category'));
         const unsubProducts = onSnapshot(qProducts, (snapshot) => {
-            setProducts(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+            const productsData = snapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+            setProducts(productsData);
             setLoading(false);
         });
 
