@@ -604,7 +604,7 @@ export default function Admin() {
                                             <div>
                                                 <h3 className="font-black text-gray-900">{prod.name}</h3>
                                                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tighter">
-                                                    {prod.category} • ₹{Number(prod.price || 0).toFixed(2)}
+                                                    {prod.category} • ₹{Number(prod.price || 0).toFixed(2)} {prod.unit && ` (${prod.unit})`}
                                                     {prod.restaurantId && ` • ${restaurants.find(r => r.id === prod.restaurantId)?.name}`}
                                                 </p>
                                             </div>
@@ -884,7 +884,8 @@ export default function Admin() {
                         </div>
                     </div>
                 </div>
-            ) : null}
-        </div>
+            ) : null
+            }
+        </div >
     );
 }

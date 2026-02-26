@@ -61,10 +61,11 @@ export default function Checkout() {
     ].sort((a, b) => a.name.localeCompare(b.name));
 
     const calculateDeliveryCharge = (dist) => {
-        if (dist <= 5) return 25;
-        // Base 25 for first 5km + 7 for every km after 5
-        const extraKm = Math.ceil(dist - 5);
-        return 25 + (extraKm * 7);
+        if (dist === 0) return 0;
+        if (dist <= 1) return 15;
+        // ₹15 for first km + ₹10 for every additional km
+        const extraKm = Math.ceil(dist - 1);
+        return 15 + (extraKm * 10);
     };
 
     const handleAreaChange = (e) => {
