@@ -7,7 +7,7 @@ let dailyUserSequence = 1;
 
 export const registerUser = async (req: Request, res: Response) => {
     try {
-        const { username, email, address, city } = req.body;
+        const { username, email, address, city, latitude, longitude } = req.body;
 
         // Generate custom User ID correctly according to specs
         const userId = generateUserId(username, dailyUserSequence++);
@@ -18,11 +18,13 @@ export const registerUser = async (req: Request, res: Response) => {
             email,
             address,
             city,
+            latitude,
+            longitude,
             createdAt: new Date().toISOString()
         };
 
         // Database integration would go here
-        // Example: await db.query('INSERT INTO Users (userId, username, email, address, city) VALUES ($1, $2, $3, $4, $5)', [newUser.userId, ...]);
+        // Example: await db.query('INSERT INTO Users (userId, username, email, address, city, latitude, longitude) VALUES ($1, $2, $3, $4, $5, $6, $7)', [newUser.userId, ...]);
 
         res.status(201).json({
             success: true,

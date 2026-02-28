@@ -15,8 +15,12 @@ export default function AdminDashboardScreen() {
                 address: '123 Main St',
                 city: 'Kakinada',
                 mobileNumber: '9876543210',
+                shopName: 'Kakinada Kitchen',
+                shopAddress: 'Bhanugudi Junction',
+                distance: 2,
+                deliveryFee: 25,
                 cartItems: [{ name: 'Veg Biryani', quantity: 2, price: 150 }],
-                totalAmount: 335,
+                totalAmount: 325,
                 status: 'Confirmed',
                 createdAt: new Date().toISOString()
             },
@@ -28,8 +32,12 @@ export default function AdminDashboardScreen() {
                 address: 'Downtown Avenue',
                 city: 'Kakinada',
                 mobileNumber: '9999999999',
+                shopName: 'Fresh Veggies Shop',
+                shopAddress: 'Main Market Road',
+                distance: 4,
+                deliveryFee: 45,
                 cartItems: [{ name: 'Pizza', quantity: 1, price: 400 }],
-                totalAmount: 435,
+                totalAmount: 445,
                 status: 'Preparing',
                 createdAt: new Date().toISOString()
             }
@@ -68,7 +76,13 @@ export default function AdminDashboardScreen() {
                 <View style={styles.detailPack}>
                     <Text style={styles.cardText}><Text style={styles.keyBold}>Consumer Link:</Text> {item.username}  ({item.userId})</Text>
                     <Text style={styles.cardText}><Text style={styles.keyBold}>Phone Contact:</Text> {item.mobileNumber}  |  {item.email}</Text>
-                    <Text style={styles.cardText}><Text style={styles.keyBold}>Global Address:</Text> {item.address}, {item.city}</Text>
+                    <Text style={styles.cardText}><Text style={styles.keyBold}>Drop Address:</Text> {item.address}, {item.city}</Text>
+                </View>
+
+                <View style={[styles.detailPack, { borderTopWidth: 1, borderTopColor: '#f1f5f9', paddingTop: 10 }]}>
+                    <Text style={styles.cardText}><Text style={styles.keyBold}>Shop Source:</Text> {item.shopName}</Text>
+                    <Text style={styles.cardText}><Text style={styles.keyBold}>Shop Location:</Text> {item.shopAddress}</Text>
+                    <Text style={styles.cardText}><Text style={styles.keyBold}>Logistics:</Text> {item.distance} KM Distance  |  ₹{item.deliveryFee} Fee</Text>
                 </View>
 
                 <View style={styles.itemsPack}>

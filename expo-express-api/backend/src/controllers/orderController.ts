@@ -3,6 +3,9 @@ import { generateOrderId } from '../utils/generators';
 import { validateCheckoutData } from '../utils/validation';
 import { Order } from '../types';
 
+import { calculateDistance } from '../utils/distance';
+import { calculateDeliveryFee } from '../utils/delivery';
+
 let dailyOrderSequence = 1;
 
 export const createOrder = async (req: Request, res: Response) => {
@@ -13,7 +16,18 @@ export const createOrder = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, error: validation.error });
         }
 
-        const { userId, mobileNumber, cartItems, subtotal, deliveryFee } = req.body;
+        const { userId, shopId, mobileNumber, cartItems, subtotal, userLat, userLng, shopLat, shopLng } = req.body;
+
+        if (!shopId) {
+            return res.status(400).json({ success: false, error: 'shopId is required' });
+        }
+
+        if (userLat === undefined || userLng === undefined || shopLat === undefined || shopLng === undefined) {
+            return res.status(400).json({ success: false, error: 'Latitude and Longitude for user and shop are required' });
+        }
+
+        const distance = calculateDistance(Number(userLat), Number(userLng), Number(shopLat), Number(shopLng));
+        const deliveryFee = calculateDeliveryFee(distance);
         const totalAmount = subtotal + deliveryFee;
 
         const orderId = generateOrderId(dailyOrderSequence++);
@@ -21,10 +35,12 @@ export const createOrder = async (req: Request, res: Response) => {
         const newOrder: Order = {
             orderId,
             userId,
+            shopId,
             mobileNumber,
+            distance,
+            deliveryFee,
             cartItems,
             subtotal,
-            deliveryFee,
             totalAmount,
             status: 'Confirmed',
             createdAt: new Date().toISOString()

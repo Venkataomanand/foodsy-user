@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, ScrollView } from 'react-native';
 
 export default function InvoiceScreen({ route }: any) {
     // Parsing parameters injected from Successful Checkout Process
-    const { orderId, orderPayload, userRecord } = route?.params || {};
+    const { orderId, orderPayload, userRecord, shopRecord } = route?.params || {};
 
     return (
         <ScrollView style={styles.wrapper}>
@@ -20,12 +20,19 @@ export default function InvoiceScreen({ route }: any) {
             </View>
 
             <View style={styles.boxCard}>
+                <Text style={styles.sectionHead}>Vendor Details</Text>
+                <Text style={styles.detail}><Text style={styles.boldKey}>Shop Name:</Text> {shopRecord?.shopName}</Text>
+                <Text style={styles.detail}><Text style={styles.boldKey}>Shop Location:</Text> {shopRecord?.address}</Text>
+            </View>
+
+            <View style={styles.boxCard}>
                 <Text style={styles.sectionHead}>Consumer Target</Text>
                 <Text style={styles.detail}><Text style={styles.boldKey}>ID Account:</Text> {userRecord?.userId}</Text>
                 <Text style={styles.detail}><Text style={styles.boldKey}>Registrant:</Text> {userRecord?.username}</Text>
                 <Text style={styles.detail}><Text style={styles.boldKey}>Email ID:</Text> {userRecord?.email}</Text>
                 <Text style={styles.detail}><Text style={styles.boldKey}>Phone Contact:</Text> {orderPayload?.mobileNumber}</Text>
                 <Text style={styles.detail}><Text style={styles.boldKey}>Physical Drop:</Text> {userRecord?.address}, {userRecord?.city}</Text>
+                <Text style={styles.detail}><Text style={styles.boldKey}>Transit Path:</Text> {orderPayload?.distance} KM Travel Distance</Text>
             </View>
 
             <View style={styles.boxCard}>
