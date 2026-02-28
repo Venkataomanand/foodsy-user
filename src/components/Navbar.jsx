@@ -69,9 +69,14 @@ export default function Navbar() {
                                     </Link>
                                 </div>
                             ) : (
-                                <Link to="/login" className="px-4 py-2 text-sm font-medium text-primary bg-white rounded-full hover:bg-gray-100 transition-colors shadow-sm">
-                                    Log in
-                                </Link>
+                                <div className="flex items-center space-x-2">
+                                    <Link to="/login" className="px-4 py-2 text-sm font-medium text-white/90 hover:text-white transition-colors">
+                                        Log in
+                                    </Link>
+                                    <Link to="/signup" className="px-4 py-2 text-sm font-medium text-primary bg-white rounded-full hover:bg-gray-100 transition-colors shadow-sm">
+                                        Sign up
+                                    </Link>
+                                </div>
                             )}
                         </div>
 
@@ -127,9 +132,14 @@ export default function Navbar() {
                             </>
                         )}
                         {!currentUser && (
-                            <Link to="/login" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
-                                Log in
-                            </Link>
+                            <>
+                                <Link to="/login" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
+                                    Log in
+                                </Link>
+                                <Link to="/signup" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
+                                    Create Account
+                                </Link>
+                            </>
                         )}
                     </div>
                 </motion.div>
