@@ -64,13 +64,9 @@ export default function Navbar() {
                         <div className="hidden sm:ml-3 sm:flex items-center">
                             {currentUser ? (
                                 <div className="flex items-center space-x-4">
-                                    <span className="text-sm text-white/90">Hi, {currentUser.email?.split('@')[0]}</span>
-                                    <button
-                                        onClick={handleLogout}
-                                        className="p-1 rounded-full text-white/80 hover:text-white focus:outline-none"
-                                    >
-                                        <LogOut className="h-6 w-6" />
-                                    </button>
+                                    <Link to="/profile" className="flex items-center justify-center w-10 h-10 rounded-full bg-orange-100 text-orange-600 font-bold text-lg shadow-md hover:bg-white hover:scale-105 transition-all outline outline-2 outline-white/50 border border-orange-200">
+                                        {currentUser.displayName ? currentUser.displayName.charAt(0).toUpperCase() : currentUser.email?.charAt(0).toUpperCase()}
+                                    </Link>
                                 </div>
                             ) : (
                                 <Link to="/login" className="px-4 py-2 text-sm font-medium text-primary bg-white rounded-full hover:bg-gray-100 transition-colors shadow-sm">
@@ -118,12 +114,17 @@ export default function Navbar() {
                             Orders
                         </Link>
                         {currentUser && (
-                            <button
-                                onClick={handleLogout}
-                                className="w-full text-left text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium"
-                            >
-                                Log out
-                            </button>
+                            <>
+                                <Link to="/profile" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium flex items-center">
+                                    <User className="h-4 w-4 mr-2" /> Profile
+                                </Link>
+                                <button
+                                    onClick={handleLogout}
+                                    className="w-full text-left text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium flex items-center text-red-100"
+                                >
+                                    <LogOut className="h-4 w-4 mr-2" /> Log out
+                                </button>
+                            </>
                         )}
                         {!currentUser && (
                             <Link to="/login" className="text-white/90 hover:bg-white/10 hover:text-white block pl-3 pr-4 py-2 text-base font-medium">
