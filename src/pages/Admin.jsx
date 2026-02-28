@@ -738,9 +738,9 @@ export default function Admin() {
                                                         onChange={(e) => handleStatusChange(o.id, e.target.value)}
                                                         className="bg-white border-0 rounded-full text-[10px] font-black py-1.5 pl-3 pr-8 shadow-sm focus:ring-2 focus:ring-primary/20"
                                                     >
-                                                        <option value="Placed">Placed</option>
-                                                        <option value="Ready">Ready</option>
-                                                        <option value="Picked Up">Picked Up</option>
+                                                        <option value="Confirmed">Confirmed</option>
+                                                        <option value="Preparing">Preparing</option>
+                                                        <option value="On the Way">On the Way</option>
                                                         <option value="Delivered">Delivered</option>
                                                     </select>
                                                 </td>
@@ -749,16 +749,16 @@ export default function Admin() {
                                                     <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">UID: {o.userId?.substring(0, 8)}...</div>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="font-black text-sm text-gray-900">{o.fullName || o.firstName || o.email?.split('@')[0]}</div>
-                                                    <div className="text-[10px] font-bold text-gray-500">{o.phone || 'N/A'}</div>
-                                                    <div className="text-[9px] font-medium text-gray-400 line-clamp-1">{o.address}</div>
+                                                    <div className="font-black text-sm text-gray-900">{o.username || o.fullName || o.firstName || o.email?.split('@')[0]}</div>
+                                                    <div className="text-[10px] font-bold text-gray-500 tracking-wide text-primary">{o.mobileNumber || o.phone || 'No Mobile'}</div>
+                                                    <div className="text-[9px] font-medium text-gray-400 mt-1">{o.address || 'No Address'}, {o.city}, {o.area}</div>
                                                 </td>
                                                 <td className="px-6 py-4 max-w-[250px]">
                                                     {o.isCustom ? (
                                                         <span className="text-primary font-bold">{o.customList}</span>
                                                     ) : (
                                                         <div className="flex flex-col gap-1">
-                                                            {o.items?.map((i, idx) => (
+                                                            {(o.cartItems || o.items)?.map((i, idx) => (
                                                                 <div key={idx} className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
                                                                     <span className="font-black text-[10px] text-gray-900 line-clamp-1 flex-1">{i.name}</span>
                                                                     {(i.selectedOption || i.unit) && (
@@ -774,8 +774,8 @@ export default function Admin() {
                                                         </div>
                                                     )}
                                                 </td>
-                                                <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.total || 0).toFixed(2)}</td>
-                                                <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date} {o.time}</td>
+                                                <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.totalAmount || o.total || 0).toFixed(2)}</td>
+                                                <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date || new Date(o.createdAt?.toDate()).toLocaleDateString()} {o.time}</td>
                                                 <td className="px-6 py-4 text-right">
                                                     <button onClick={() => deleteOrder(o.id)} className="p-2 text-red-400 hover:text-red-600 transition-colors">
                                                         <Trash2 className="h-5 w-5" />

@@ -4,11 +4,11 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircle, Truck, Wallet, Banknote, CreditCard } from 'lucide-react';
 import { db } from '../firebase';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 
 export default function Checkout() {
     const { cartItems, cartTotal, clearCart } = useCart();
-    const { currentUser } = useAuth();
+    const { currentUser, userData } = useAuth();
     const navigate = useNavigate();
 
     // Enforce login
@@ -22,8 +22,6 @@ export default function Checkout() {
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [orderData, setOrderData] = useState(null);
     const [formData, setFormData] = useState({
-        fullName: '',
-        address: '',
         area: '',
         phone: ''
     });
@@ -81,14 +79,25 @@ export default function Checkout() {
         }
     };
 
-    // Generate Custom ID: First 2 chars of Name (uppercase) + Date (YYYYMMDD) + Random
-    const generateOrderId = (fullName) => {
-        const prefix = fullName ? fullName.substring(0, 2).toUpperCase() : 'GU';
-        const date = new Date();
-        const year = date.getFullYear();
-        const month = String(date.getMonth() + 1).padStart(2, '0');
-        const day = String(date.getDate()).padStart(2, '0');
-        return `${prefix}-${year}${month}${day}-${Math.floor(Math.random() * 1000)}`;
+    const generateOrderId = async () => {
+        const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+        const sequenceRef = doc(db, 'sequences', `orders_${dateStr}`);
+        let seqNum = 1;
+        try {
+            await runTransaction(db, async (t) => {
+                const docSnap = await t.get(sequenceRef);
+                if (!docSnap.exists()) {
+                    t.set(sequenceRef, { count: 1 });
+                } else {
+                    seqNum = docSnap.data().count + 1;
+                    t.update(sequenceRef, { count: seqNum });
+                }
+            });
+        } catch (e) {
+            console.error("Sequence error:", e);
+            seqNum = Math.floor(Math.random() * 999) + 1;
+        }
+        return `ORD-${dateStr}-${seqNum.toString().padStart(3, '0')}`;
     };
 
     async function handlePlaceOrder(e) {
@@ -110,31 +119,31 @@ export default function Checkout() {
 
         try {
             const email = currentUser.email;
-            const newOrderId = generateOrderId(formData.fullName);
+            const newOrderId = await generateOrderId();
             const finalTotal = cartTotal + deliveryCharge;
 
             const currentOrder = {
-                id: newOrderId,
-                userId: currentUser.uid,
-                email: email,
-                fullName: formData.fullName,
-                address: `${formData.address}, ${formData.area}`,
+                orderId: newOrderId,
+                id: newOrderId, // Legacy support
+                userId: userData?.userId || currentUser.uid,
+                username: userData?.username || currentUser.displayName,
+                email: currentUser.email,
+                address: userData?.address || '',
+                city: userData?.city || 'Kakinada',
                 area: formData.area,
-                distance: deliveryDistance,
-                deliveryFee: deliveryCharge,
-                phone: formData.phone,
-                items: cartItems.map(item => ({
-                    id: item.id,
+                mobileNumber: formData.phone,
+                cartItems: cartItems.map(item => ({
+                    productId: item.id,
                     name: item.name,
                     price: item.price,
                     quantity: item.quantity,
                     selectedOption: item.selectedOption || null,
                     unit: item.unit || null
                 })),
-                total: finalTotal,
-                status: 'Placed',
-                date: new Date().toLocaleDateString(),
-                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                subtotal: cartTotal,
+                deliveryFee: deliveryCharge,
+                totalAmount: finalTotal,
+                status: 'Confirmed',
                 createdAt: serverTimestamp(),
                 paymentMethod: 'Cash on Delivery',
                 paymentStatus: 'Pending',
@@ -202,33 +211,58 @@ export default function Checkout() {
                             )}
                         </div>
 
-                        <div className="mb-8">
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4">Invoice</h3>
+                        <div className="mb-8 p-6 bg-gray-50 border border-gray-100 rounded-xl relative">
+                            <div className="absolute top-4 right-4 bg-green-100 text-green-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">
+                                {orderData.status}
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-6 flex items-center">
+                                <span className="text-2xl mr-2">🧾</span> Official Invoice
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-6 border-b border-gray-200 pb-6">
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-500 mb-1">Customer Info</p>
+                                    <p className="text-base text-gray-900"><span className="font-semibold text-gray-700">Name:</span> {orderData.username}</p>
+                                    <p className="text-base text-gray-900"><span className="font-semibold text-gray-700">Account ID:</span> {orderData.userId}</p>
+                                    <p className="text-base text-gray-900"><span className="font-semibold text-gray-700">Contact:</span> {orderData.mobileNumber}</p>
+                                </div>
+                                <div className="mt-4 md:mt-0">
+                                    <p className="text-sm font-semibold text-gray-500 mb-1">Delivery Target</p>
+                                    <p className="text-base text-gray-900 line-clamp-3">{orderData.address}</p>
+                                    <p className="text-base text-gray-900 font-semibold">{orderData.city}</p>
+                                    <p className="text-sm text-gray-500 underline decoration-dotted mt-1">Area: {orderData.area}</p>
+                                </div>
+                            </div>
+
                             <div className="space-y-4">
-                                {orderData.items.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between text-sm">
-                                        <div>
-                                            <span className="text-gray-600">{item.name} x {item.quantity}</span>
+                                <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest border-b border-gray-200 pb-2">Order Summary</h4>
+                                {orderData.cartItems.map((item, idx) => (
+                                    <div key={idx} className="flex justify-between items-center text-sm">
+                                        <div className="flex items-center space-x-2">
+                                            <span className="font-black text-gray-700">{item.quantity}x</span>
+                                            <span className="text-gray-800 font-medium">{item.name}</span>
                                             {item.selectedOption && (
-                                                <span className="ml-2 px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] font-black rounded uppercase">
+                                                <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] font-bold rounded uppercase">
                                                     {item.selectedOption}
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="font-medium text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                        <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
                                     </div>
                                 ))}
-                                <div className="flex justify-between text-base font-medium">
-                                    <span className="text-gray-900">Subtotal</span>
-                                    <span className="text-gray-900">₹{cartTotal.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-base font-medium">
-                                    <span className="text-gray-900">Delivery Fee</span>
-                                    <span className="text-gray-900">₹{orderData.deliveryFee.toFixed(2)}</span>
-                                </div>
-                                <div className="flex justify-between text-lg font-bold">
-                                    <span className="text-primary">Total</span>
-                                    <span className="text-primary">₹{orderData.total.toFixed(2)}</span>
+                                <div className="border-t border-gray-200 pt-4 mt-2">
+                                    <div className="flex justify-between text-sm font-medium mb-2">
+                                        <span className="text-gray-600">Subtotal</span>
+                                        <span className="text-gray-900">₹{orderData.subtotal.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between text-sm font-medium mb-3">
+                                        <span className="text-gray-600">Logistics & Delivery</span>
+                                        <span className="text-gray-900">₹{orderData.deliveryFee.toFixed(2)}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-gray-100 p-3 rounded-lg border border-gray-200 shadow-inner">
+                                        <span className="text-lg font-black text-gray-900 uppercase">Grand Total</span>
+                                        <span className="text-2xl font-black text-primary">₹{orderData.totalAmount.toFixed(2)}</span>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -304,19 +338,27 @@ export default function Checkout() {
                         <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
                         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                             <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                                <label className="block text-sm font-medium text-gray-700">Account ID</label>
                                 <input
                                     type="text"
-                                    required
-                                    value={formData.fullName}
-                                    onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                    placeholder="Enter your full name"
+                                    disabled
+                                    value={userData?.userId || ''}
+                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed font-medium"
                                 />
                             </div>
 
                             <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Email Address (from account)</label>
+                                <label className="block text-sm font-medium text-gray-700">Username</label>
+                                <input
+                                    type="text"
+                                    disabled
+                                    value={userData?.username || currentUser?.displayName || ''}
+                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed"
+                                />
+                            </div>
+
+                            <div className="sm:col-span-6">
+                                <label className="block text-sm font-medium text-gray-700">Email Address</label>
                                 <input
                                     type="email"
                                     disabled
@@ -333,7 +375,7 @@ export default function Checkout() {
                                     onChange={handleAreaChange}
                                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
                                 >
-                                    <option value="">Select your area...</option>
+                                    <option value="">Select your area for charges estimation...</option>
                                     {AREAS.map(area => (
                                         <option key={area.name} value={area.name}>
                                             {area.name}
@@ -342,15 +384,23 @@ export default function Checkout() {
                                 </select>
                             </div>
 
-                            <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Street Address / House No.</label>
+                            <div className="sm:col-span-3">
+                                <label className="block text-sm font-medium text-gray-700">Home Address</label>
                                 <input
                                     type="text"
-                                    required
-                                    value={formData.address}
-                                    onChange={(e) => setFormData({ ...formData, address: e.target.value })}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                    placeholder="e.g. Flat 402, Sai Residency"
+                                    disabled
+                                    value={userData?.address || ''}
+                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed"
+                                />
+                            </div>
+
+                            <div className="sm:col-span-3">
+                                <label className="block text-sm font-medium text-gray-700">City</label>
+                                <input
+                                    type="text"
+                                    disabled
+                                    value={userData?.city || 'Kakinada'}
+                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed font-bold"
                                 />
                             </div>
 
