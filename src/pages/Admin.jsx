@@ -745,37 +745,48 @@ export default function Admin() {
                                                     </select>
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <div className="font-black text-[10px] text-gray-900 leading-none mb-1">{o.id}</div>
-                                                    <div className="text-[9px] font-bold text-gray-400 uppercase tracking-tighter">UID: {o.userId?.substring(0, 8)}...</div>
+                                                    <div className="font-black text-[10px] text-gray-900 leading-none mb-1">{o.orderId || o.id}</div>
+                                                    <div className="text-[9px] font-bold text-gray-500 uppercase tracking-tighter bg-gray-100 inline-block px-1 py-0.5 rounded border border-gray-200 mt-1">
+                                                        User: {o.userId || 'N/A'}
+                                                    </div>
                                                 </td>
                                                 <td className="px-6 py-4">
                                                     <div className="font-black text-sm text-gray-900">{o.username || o.fullName || o.firstName || o.email?.split('@')[0]}</div>
                                                     <div className="text-[10px] font-bold text-gray-500 tracking-wide text-primary">{o.mobileNumber || o.phone || 'No Mobile'}</div>
-                                                    <div className="text-[9px] font-medium text-gray-400 mt-1">{o.address || 'No Address'}, {o.city}, {o.area}</div>
+                                                    <div className="text-[9px] font-medium text-gray-400 mt-1 line-clamp-1">{[o.address, o.city, o.area].filter(Boolean).join(', ')}</div>
                                                 </td>
                                                 <td className="px-6 py-4 max-w-[250px]">
                                                     {o.isCustom ? (
                                                         <span className="text-primary font-bold">{o.customList}</span>
                                                     ) : (
                                                         <div className="flex flex-col gap-1">
-                                                            {(o.cartItems || o.items)?.map((i, idx) => (
-                                                                <div key={idx} className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
-                                                                    <span className="font-black text-[10px] text-gray-900 line-clamp-1 flex-1">{i.name}</span>
-                                                                    {(i.selectedOption || i.unit) && (
-                                                                        <span className="bg-orange-100 text-orange-700 text-[9px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap border border-orange-200">
-                                                                            WEIGHT: {i.selectedOption || i.unit}
+                                                            {(() => {
+                                                                let items = o.cartItems || o.items || [];
+                                                                if (typeof items === 'string') {
+                                                                    try { items = JSON.parse(items); } catch (e) { items = []; }
+                                                                }
+                                                                return items.map((i, idx) => (
+                                                                    <div key={idx} className="flex items-center gap-2 bg-gray-50 p-1.5 rounded-lg border border-gray-100">
+                                                                        <span className="font-black text-[10px] text-gray-900 line-clamp-1 flex-1">{i.name}</span>
+                                                                        {(i.selectedOption || i.unit) && (
+                                                                            <span className="bg-orange-100 text-orange-700 text-[9px] font-black px-1.5 py-0.5 rounded-md whitespace-nowrap border border-orange-200">
+                                                                                WEIGHT: {i.selectedOption || i.unit}
+                                                                            </span>
+                                                                        )}
+                                                                        <span className="text-[10px] font-black text-gray-400 bg-white px-1.5 py-0.5 rounded border border-gray-100">
+                                                                            x{i.quantity}
                                                                         </span>
-                                                                    )}
-                                                                    <span className="text-[10px] font-black text-gray-400 bg-white px-1.5 py-0.5 rounded border border-gray-100">
-                                                                        x{i.quantity}
-                                                                    </span>
-                                                                </div>
-                                                            ))}
+                                                                    </div>
+                                                                ));
+                                                            })()}
                                                         </div>
                                                     )}
                                                 </td>
                                                 <td className="px-6 py-4 font-black text-gray-900">₹{Number(o.totalAmount || o.total || 0).toFixed(2)}</td>
-                                                <td className="px-6 py-4 text-[10px] font-bold text-gray-400">{o.date || new Date(o.createdAt?.toDate()).toLocaleDateString()} {o.time}</td>
+                                                <td className="px-6 py-4 text-[10px] font-bold text-gray-400">
+                                                    {o.date || (o.createdAt?.toDate ? new Date(o.createdAt.toDate()).toLocaleDateString() : '')} <br />
+                                                    {o.time || (o.createdAt?.toDate ? new Date(o.createdAt.toDate()).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
+                                                </td>
                                                 <td className="px-6 py-4 text-right">
                                                     <button onClick={() => deleteOrder(o.id)} className="p-2 text-red-400 hover:text-red-600 transition-colors">
                                                         <Trash2 className="h-5 w-5" />
