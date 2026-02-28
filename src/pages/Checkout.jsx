@@ -22,7 +22,6 @@ export default function Checkout() {
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [orderData, setOrderData] = useState(null);
     const [formData, setFormData] = useState({
-        area: '',
         phone: ''
     });
     const [deliveryDistance, setDeliveryDistance] = useState(0);
@@ -67,16 +66,7 @@ export default function Checkout() {
     };
 
     const handleAreaChange = (e) => {
-        const selectedArea = AREAS.find(a => a.name === e.target.value);
-        if (selectedArea) {
-            setFormData({ ...formData, area: selectedArea.name });
-            setDeliveryDistance(selectedArea.distance);
-            setDeliveryCharge(calculateDeliveryCharge(selectedArea.distance));
-        } else {
-            setFormData({ ...formData, area: '' });
-            setDeliveryDistance(0);
-            setDeliveryCharge(0);
-        }
+        // Obsolete
     };
 
     const generateOrderId = async () => {
@@ -130,7 +120,6 @@ export default function Checkout() {
                 email: currentUser.email,
                 address: userData?.address || '',
                 city: userData?.city || 'Kakinada',
-                area: formData.area,
                 mobileNumber: formData.phone,
                 cartItems: cartItems.map(item => ({
                     productId: item.id,
@@ -145,6 +134,8 @@ export default function Checkout() {
                 totalAmount: finalTotal,
                 status: 'Confirmed',
                 createdAt: serverTimestamp(),
+                date: new Date().toLocaleDateString(),
+                time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 paymentMethod: 'Cash on Delivery',
                 paymentStatus: 'Pending',
                 transactionId: null
@@ -230,7 +221,6 @@ export default function Checkout() {
                                     <p className="text-sm font-semibold text-gray-500 mb-1">Delivery Target</p>
                                     <p className="text-base text-gray-900 line-clamp-3">{orderData.address}</p>
                                     <p className="text-base text-gray-900 font-semibold">{orderData.city}</p>
-                                    <p className="text-sm text-gray-500 underline decoration-dotted mt-1">Area: {orderData.area}</p>
                                 </div>
                             </div>
 
@@ -338,16 +328,6 @@ export default function Checkout() {
                         <h2 className="text-xl font-semibold mb-4">Shipping Address</h2>
                         <div className="grid grid-cols-1 gap-y-6 gap-x-4 sm:grid-cols-6">
                             <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Account ID</label>
-                                <input
-                                    type="text"
-                                    disabled
-                                    value={userData?.userId || ''}
-                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed font-medium"
-                                />
-                            </div>
-
-                            <div className="sm:col-span-6">
                                 <label className="block text-sm font-medium text-gray-700">Username</label>
                                 <input
                                     type="text"
@@ -365,23 +345,6 @@ export default function Checkout() {
                                     value={currentUser?.email || ''}
                                     className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed"
                                 />
-                            </div>
-
-                            <div className="sm:col-span-6">
-                                <label className="block text-sm font-medium text-gray-700">Delivery Area</label>
-                                <select
-                                    required
-                                    value={formData.area}
-                                    onChange={handleAreaChange}
-                                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
-                                >
-                                    <option value="">Select your area for charges estimation...</option>
-                                    {AREAS.map(area => (
-                                        <option key={area.name} value={area.name}>
-                                            {area.name}
-                                        </option>
-                                    ))}
-                                </select>
                             </div>
 
                             <div className="sm:col-span-3">
