@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import { CheckCircle, Truck, Wallet, Banknote, CreditCard } from 'lucide-react';
+import { CheckCircle, Truck, Wallet, Banknote, CreditCard, MapPin } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 
@@ -28,34 +28,52 @@ export default function Checkout() {
     const [deliveryCharge, setDeliveryCharge] = useState(0);
 
     const AREAS = [
-        { name: "Sarpavaram", distance: 3 },
-        { name: "Ramanayapeta", distance: 2 },
-        { name: "Gandhi Nagar", distance: 2 },
-        { name: "Ashok Nagar", distance: 3 },
-        { name: "Vidya Nagar", distance: 3 },
-        { name: "Bank Colony", distance: 3 },
-        { name: "Revenue Colony", distance: 3 },
-        { name: "Teachers' Colony", distance: 3 },
-        { name: "G.P.T. Colony", distance: 4 },
-        { name: "Maruti Nagar", distance: 4 },
-        { name: "Lalitha Nagar", distance: 4 },
-        { name: "Madura Nagar", distance: 4 },
-        { name: "Santhi Nagar", distance: 4 },
-        { name: "Rama Rao Peta", distance: 2 },
-        { name: "Bhanugudi Junction", distance: 1 },
-        { name: "Jagannaickpur", distance: 5 },
-        { name: "Kacheripeta", distance: 5 },
-        { name: "Vakalapudi", distance: 4.6 },
-        { name: "Turangi", distance: 5 },
-        { name: "Thimmapuram", distance: 8 },
-        { name: "Rayudupalem", distance: 7 },
-        { name: "Kovvada", distance: 8 },
-        { name: "Balaji Cheruvu", distance: 2 },
-        { name: "Beach Road", distance: 5 },
-        { name: "Dummulapeta", distance: 5 },
-        { name: "Nagamallithota", distance: 1 },
-        { name: "JNTUK Area", distance: 0 }
+        { name: "Sarpavaram", distance: 3, lat: 16.985, lng: 82.250 },
+        { name: "Ramanayapeta", distance: 2, lat: 16.965, lng: 82.253 },
+        { name: "Gandhi Nagar", distance: 2, lat: 16.960, lng: 82.235 },
+        { name: "Ashok Nagar", distance: 3, lat: 16.955, lng: 82.230 },
+        { name: "Vidya Nagar", distance: 3, lat: 16.950, lng: 82.240 },
+        { name: "Bank Colony", distance: 3, lat: 16.945, lng: 82.245 },
+        { name: "Revenue Colony", distance: 3, lat: 16.940, lng: 82.250 },
+        { name: "Teachers Colony", distance: 3, lat: 16.935, lng: 82.255 },
+        { name: "G.P.T. Colony", distance: 4, lat: 16.930, lng: 82.260 },
+        { name: "Maruti Nagar", distance: 4, lat: 16.925, lng: 82.265 },
+        { name: "Lalitha Nagar", distance: 4, lat: 16.920, lng: 82.270 },
+        { name: "Madura Nagar", distance: 4, lat: 16.915, lng: 82.275 },
+        { name: "Santhi Nagar", distance: 4, lat: 16.910, lng: 82.280 },
+        { name: "Rama Rao Peta", distance: 2, lat: 16.970, lng: 82.245 },
+        { name: "Bhanugudi Junction", distance: 1, lat: 16.960, lng: 82.240 },
+        { name: "Jagannaickpur", distance: 5, lat: 16.945, lng: 82.260 },
+        { name: "Kacheripeta", distance: 5, lat: 16.940, lng: 82.265 },
+        { name: "Vakalapudi", distance: 4.6, lat: 16.995, lng: 82.270 },
+        { name: "Turangi", distance: 5, lat: 16.950, lng: 82.275 },
+        { name: "Thimmapuram", distance: 8, lat: 17.010, lng: 82.280 },
+        { name: "Rayudupalem", distance: 7, lat: 17.000, lng: 82.230 },
+        { name: "Kovvada", distance: 8, lat: 17.020, lng: 82.220 },
+        { name: "Balaji Cheruvu", distance: 2, lat: 16.975, lng: 82.240 },
+        { name: "Beach Road", distance: 5, lat: 16.970, lng: 82.270 },
+        { name: "Dummulapeta", distance: 5, lat: 16.965, lng: 82.275 },
+        { name: "Nagamallithota", distance: 1, lat: 16.965, lng: 82.245 },
+        { name: "JNTUK Area", distance: 0, lat: 16.974, lng: 82.242 }
     ].sort((a, b) => a.name.localeCompare(b.name));
+
+    const VEG_HUB = {
+        name: "Sapthagiri juice shop (Veg Hub)",
+        address: "Ramanayyapeta, Boat Club",
+        lat: 16.9680,
+        lng: 82.2580
+    };
+
+    const calculateHaversine = (lat1, lon1, lat2, lon2) => {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return Math.ceil(R * c);
+    };
 
     const calculateDeliveryCharge = (dist) => {
         if (dist === 0) return 0;
@@ -64,6 +82,30 @@ export default function Checkout() {
         const extraKm = Math.ceil(dist - 1);
         return 15 + (extraKm * 10);
     };
+
+    useEffect(() => {
+        if (userData) {
+            // Determine if Veg Hub should be used
+            const hasVeggie = cartItems.some(item =>
+                ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category)
+            );
+
+            // User Location
+            const userLat = userData.latitude || (AREAS.find(a => userData.address?.includes(a.name))?.lat) || 16.974;
+            const userLng = userData.longitude || (AREAS.find(a => userData.address?.includes(a.name))?.lng) || 82.242;
+
+            // Source Location
+            const sourceLat = hasVeggie ? VEG_HUB.lat : 16.974; // Default to JNTUK Area
+            const sourceLng = hasVeggie ? VEG_HUB.lng : 82.242;
+
+            const dist = calculateHaversine(sourceLat, sourceLng, userLat, userLng);
+            setDeliveryDistance(dist);
+
+            // Rules: First 1 KM -> ₹15, After -> +₹10 each extra
+            const fee = dist <= 1 ? 15 : 15 + ((dist - 1) * 10);
+            setDeliveryCharge(fee);
+        }
+    }, [userData, cartItems]);
 
     const handleAreaChange = (e) => {
         // Obsolete
