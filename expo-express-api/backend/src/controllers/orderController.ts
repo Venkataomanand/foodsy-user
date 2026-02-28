@@ -26,7 +26,19 @@ export const createOrder = async (req: Request, res: Response) => {
             return res.status(400).json({ success: false, error: 'Latitude and Longitude for user and shop are required' });
         }
 
-        const distance = calculateDistance(Number(userLat), Number(userLng), Number(shopLat), Number(shopLng));
+        // Logic check: Any item belongs to Vegetable/Fruit category?
+        const hasVeggie = Array.isArray(cartItems) && cartItems.some(item =>
+            ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category || '')
+        );
+
+        // Sapthagiri juice shop, Ramanayyapeta (Veg Hub)
+        const VEG_HUB_LAT = 16.9680;
+        const VEG_HUB_LNG = 82.2580;
+
+        const effectiveShopLat = hasVeggie ? VEG_HUB_LAT : Number(shopLat);
+        const effectiveShopLng = hasVeggie ? VEG_HUB_LNG : Number(shopLng);
+
+        const distance = calculateDistance(Number(userLat), Number(userLng), effectiveShopLat, effectiveShopLng);
         const deliveryFee = calculateDeliveryFee(distance);
         const totalAmount = subtotal + deliveryFee;
 

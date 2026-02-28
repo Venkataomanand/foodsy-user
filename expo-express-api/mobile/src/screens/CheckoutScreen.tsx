@@ -23,19 +23,48 @@ export default function CheckoutScreen({ navigation, route }: any) {
     };
 
     // Example data payload usually imported from CartContext
-    const myCart = [{ productId: '1', name: 'Veg Biryani', price: 150, quantity: 2 }];
-    const checkoutSubtotal = 300;
+    const myCart = [
+        { productId: '1', name: 'Veg Biryani', price: 150, quantity: 2, category: 'Biryanis' },
+        { productId: '2', name: 'Carrot', price: 40, quantity: 1, category: 'Vegetables' } // Example veggie
+    ];
+    const checkoutSubtotal = 340;
+
+    const VEG_HUB = {
+        shopName: 'Sapthagiri juice shop',
+        address: 'Ramanayyapeta, Boat Club',
+        latitude: 16.9680,
+        longitude: 82.2580
+    };
 
     const [distance, setDistance] = useState(0);
     const [deliverySurcharge, setDeliverySurcharge] = useState(0);
+    const [activeShop, setActiveShop] = useState(mockShopData);
 
     useEffect(() => {
+        // Detect if order contains veggies/fruits
+        const hasVeggie = myCart.some(item =>
+            ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category || '')
+        );
+
+        const sourceLat = hasVeggie ? VEG_HUB.latitude : mockShopData.latitude;
+        const sourceLng = hasVeggie ? VEG_HUB.longitude : mockShopData.longitude;
+
+        if (hasVeggie) {
+            setActiveShop({
+                ...mockShopData,
+                shopName: VEG_HUB.shopName,
+                address: VEG_HUB.address,
+                latitude: VEG_HUB.latitude,
+                longitude: VEG_HUB.longitude
+            });
+        }
+
         // Calculate distance on mount
         const calcDist = calculateDistance(
             mockUserPayload.latitude,
             mockUserPayload.longitude,
-            mockShopData.latitude,
-            mockShopData.longitude
+            sourceLat,
+            sourceLng
         );
         setDistance(calcDist);
         setDeliverySurcharge(calculateDeliveryFee(calcDist));
@@ -57,7 +86,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
         try {
             const orderPayloadSchema = {
                 userId: mockUserPayload.userId,
-                shopId: mockShopData.id,
+                shopId: activeShop.id,
                 mobileNumber,
                 distance,
                 deliveryFee: deliverySurcharge,
@@ -76,7 +105,7 @@ export default function CheckoutScreen({ navigation, route }: any) {
                 orderId: systemOrderIdGenerated,
                 orderPayload: orderPayloadSchema,
                 userRecord: mockUserPayload,
-                shopRecord: mockShopData
+                shopRecord: activeShop
             });
 
         } catch (e: any) {
@@ -92,8 +121,8 @@ export default function CheckoutScreen({ navigation, route }: any) {
 
             <View style={styles.shopBox}>
                 <Text style={styles.label}>Ordering From:</Text>
-                <Text style={styles.value}>{mockShopData.shopName}</Text>
-                <Text style={styles.subValue}>{mockShopData.address}</Text>
+                <Text style={styles.value}>{activeShop.shopName}</Text>
+                <Text style={styles.subValue}>{activeShop.address}</Text>
             </View>
 
             <View style={styles.infoBox}>
