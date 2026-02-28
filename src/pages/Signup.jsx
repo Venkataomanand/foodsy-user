@@ -10,7 +10,7 @@ export default function Signup() {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [address, setAddress] = useState('');
-    const [city, setCity] = useState('Palnadu');
+    const [city, setCity] = useState('Kakinada');
 
     // Step 2 fields
     const [password, setPassword] = useState('');
@@ -53,8 +53,8 @@ export default function Signup() {
             return;
         }
 
-        if (city.trim().toLowerCase() !== 'palnadu') {
-            setError('The app currently supports only the Palnadu region.');
+        if (city.trim().toLowerCase() !== 'kakinada') {
+            setError('The app currently supports only the Kakinada region.');
             triggerValidationShake();
             return;
         }
@@ -207,10 +207,10 @@ export default function Signup() {
                                         value={city}
                                         onChange={(e) => setCity(e.target.value)}
                                         className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
-                                        placeholder="Palnadu"
+                                        placeholder="Kakinada"
                                     />
                                 </div>
-                                <p className="mt-1 text-xs text-orange-500 font-medium">Currently serving only Palnadu region.</p>
+                                <p className="mt-1 text-xs text-orange-500 font-medium">Currently serving only Kakinada region.</p>
                             </div>
 
                             <div>

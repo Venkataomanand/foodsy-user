@@ -17,7 +17,7 @@ export default function Profile() {
     // Edit form states
     const [editUsername, setEditUsername] = useState('');
     const [editAddress, setEditAddress] = useState('');
-    const [editCity, setEditCity] = useState('Palnadu');
+    const [editCity, setEditCity] = useState('Kakinada');
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
     const [shake, setShake] = useState(false);
@@ -36,7 +36,7 @@ export default function Profile() {
                     setUserData(docSnap.data());
                     setEditUsername(docSnap.data().username || currentUser.displayName || '');
                     setEditAddress(docSnap.data().address || '');
-                    setEditCity(docSnap.data().city || 'Palnadu');
+                    setEditCity(docSnap.data().city || 'Kakinada');
                 } else {
                     setEditUsername(currentUser.displayName || '');
                 }
@@ -80,8 +80,8 @@ export default function Profile() {
             return;
         }
 
-        if (editCity.trim().toLowerCase() !== 'palnadu') {
-            setError('Currently serving only Palnadu region.');
+        if (editCity.trim().toLowerCase() !== 'kakinada') {
+            setError('Currently serving only Kakinada region.');
             triggerValidationShake();
             return;
         }
@@ -187,7 +187,7 @@ export default function Profile() {
                                             <div className="flex items-start">
                                                 <Building2 className="h-5 w-5 text-gray-400 mt-0.5 mr-3 flex-shrink-0" />
                                                 <div>
-                                                    <p className="text-sm font-medium text-gray-900">{userData?.city || 'Palnadu'}</p>
+                                                    <p className="text-sm font-medium text-gray-900">{userData?.city || 'Kakinada'}</p>
                                                     <p className="text-xs text-gray-500 mt-1">City</p>
                                                 </div>
                                             </div>
@@ -261,7 +261,7 @@ export default function Profile() {
                                                 className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5 border shadow-sm transition-colors"
                                             />
                                         </div>
-                                        <p className="mt-1 text-xs text-orange-500 font-medium">Currently serving only Palnadu region.</p>
+                                        <p className="mt-1 text-xs text-orange-500 font-medium">Currently serving only Kakinada region.</p>
                                     </div>
 
                                     <div className="flex gap-3 pt-4">
@@ -273,7 +273,7 @@ export default function Profile() {
                                                 // Reset to initial values
                                                 setEditUsername(userData?.username || currentUser?.displayName || '');
                                                 setEditAddress(userData?.address || '');
-                                                setEditCity(userData?.city || 'Palnadu');
+                                                setEditCity(userData?.city || 'Kakinada');
                                             }}
                                             className="flex-1 flex justify-center py-2.5 px-4 rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 font-bold transition-colors shadow-sm"
                                         >
