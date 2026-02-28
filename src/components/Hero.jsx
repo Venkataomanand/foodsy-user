@@ -80,7 +80,7 @@ export default function Hero() {
                                 type="text"
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Search for restaurant, cuisine or a dish"
+                                placeholder="Search for your favorite dish or snack"
                                 className="w-full focus:outline-none text-lg text-gray-800"
                             />
                         </div>
