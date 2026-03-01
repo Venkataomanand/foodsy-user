@@ -101,8 +101,11 @@ export default function Home() {
                             <AlertCircle className="h-6 w-6" />
                         </div>
                         <div>
-                            <h2 className="text-xl font-black text-red-900">Store is Currently Offline</h2>
-                            <p className="text-red-600 font-bold text-sm">We are not accepting orders at this moment. Please check back later!</p>
+                            <h2 className="text-xl font-black text-red-900 leading-tight">Store is Currently Offline</h2>
+                            <p className="text-red-700 font-extrabold text-lg mt-1 animate-pulse tracking-wide">
+                                🚀 MARCH 5TH LAUNCH AT 9:09AM
+                            </p>
+                            <p className="text-red-600 font-bold text-sm mt-1">We are not accepting orders right now. Prepare for our grand update!</p>
                         </div>
                     </div>
                 </div>
