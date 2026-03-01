@@ -60,10 +60,13 @@ function App() {
                     <div className="bg-gray-50 border border-gray-100 p-6 rounded-3xl shadow-sm mb-8">
                       <div className="flex items-center justify-center space-x-1 mb-2">
                         <span className="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
-                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">Offline Status</span>
+                        <span className="text-xs font-black uppercase tracking-widest text-gray-400">Launch Update</span>
                       </div>
+                      <p className="text-xl font-black text-primary animate-pulse mb-3">
+                        🚀 MARCH 5TH LAUNCH AT 9:09AM
+                      </p>
                       <p className="text-sm font-bold text-gray-500">
-                        Check back in a few hours or follow our WhatsApp for updates.
+                        Stay tuned for our biggest update yet. We'll be back online soon!
                       </p>
                     </div>
                     <button
