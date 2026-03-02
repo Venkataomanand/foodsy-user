@@ -185,6 +185,26 @@ export default function Checkout() {
 
             await setDoc(doc(db, 'orders', newOrderId), currentOrder);
 
+            // Webhook for order notifications to n8n
+            try {
+                const webhookData = new URLSearchParams();
+                webhookData.append('userId', currentOrder.userId);
+                webhookData.append('totalAmount', currentOrder.totalAmount);
+                webhookData.append('mobileNumber', currentOrder.mobileNumber);
+                webhookData.append('email', currentOrder.email);
+
+                await fetch("https://venkataomanand.app.n8n.cloud/webhook/foodsy-order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: webhookData
+                });
+            } catch (webhookErr) {
+                console.error("Webhook submission failed:", webhookErr);
+            }
+
+            alert("Order Confirmed Successfully ✅");
             setOrderSuccess(true);
             setOrderData(currentOrder);
             clearCart();
