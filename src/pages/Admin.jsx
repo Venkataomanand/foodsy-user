@@ -71,20 +71,25 @@ export default function Admin() {
     const [restaurantSearchQuery, setRestaurantSearchQuery] = useState('');
 
     // Password Lock State
-    const [isLocked, setIsLocked] = useState(sessionStorage.getItem('adminAuth') !== 'true');
+    const [isLocked, setIsLocked] = useState(sessionStorage.getItem('foodsy_admin_session_auth') !== 'true');
     const [passwordInput, setPasswordInput] = useState('');
     const [loginError, setLoginError] = useState(false);
 
     const handleLogin = (e) => {
         e.preventDefault();
         if (passwordInput === 'FoodsyA@2026') {
-            sessionStorage.setItem('adminAuth', 'true');
+            sessionStorage.setItem('foodsy_admin_session_auth', 'true');
             setIsLocked(false);
             setLoginError(false);
         } else {
             setLoginError(true);
             setPasswordInput('');
         }
+    };
+
+    const handleLogout = () => {
+        sessionStorage.removeItem('foodsy_admin_session_auth');
+        setIsLocked(true);
     };
 
     // Utility Functions
@@ -543,6 +548,7 @@ export default function Admin() {
                     <button onClick={toggleStore} disabled={updatingStore} className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${storeOpen ? 'bg-primary' : 'bg-gray-200'}`}>
                         <span className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${storeOpen ? 'translate-x-7' : 'translate-x-1'}`} />
                     </button>
+                    <button onClick={handleLogout} className="ml-4 p-2 text-gray-400 hover:text-red-500 transition-colors" title="Lock Dashboard"><EyeOff className="h-5 w-5" /></button>
                     <button onClick={handleSeed} className="ml-4 p-2 text-gray-400 hover:text-primary transition-colors" title="Seed Data"><RefreshCw className="h-5 w-5" /></button>
                 </div>
             </div>
