@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useProduct } from '../context/ProductContext';
 import { CheckCircle, Truck, Wallet, Banknote, CreditCard, MapPin } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
@@ -9,6 +10,7 @@ import { doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore
 export default function Checkout() {
     const { cartItems, cartTotal, clearCart } = useCart();
     const { currentUser, userData } = useAuth();
+    const { restaurants } = useProduct();
     const navigate = useNavigate();
 
     // Enforce login
@@ -95,14 +97,27 @@ export default function Checkout() {
             const userLng = userData.longitude || (AREAS.find(a => userData.address?.includes(a.name))?.lng) || 82.242;
 
             // Source Location
-            const sourceLat = hasVeggie ? VEG_HUB.lat : 16.974; // Default to JNTUK Area
-            const sourceLng = hasVeggie ? VEG_HUB.lng : 82.242;
+            let sourceLat = 16.974; // Default to JNTUK Area
+            let sourceLng = 82.242;
+
+            if (hasVeggie) {
+                sourceLat = VEG_HUB.lat;
+                sourceLng = VEG_HUB.lng;
+            } else if (cartItems.length > 0) {
+                // Find the restaurant for the first item in cart
+                const firstItemResId = cartItems[0].restaurantId;
+                const activeRes = restaurants.find(r => r.id === firstItemResId);
+                if (activeRes && activeRes.latitude && activeRes.longitude) {
+                    sourceLat = activeRes.latitude;
+                    sourceLng = activeRes.longitude;
+                }
+            }
 
             const dist = calculateHaversine(sourceLat, sourceLng, userLat, userLng);
             setDeliveryDistance(dist);
 
-            // Rules: First 1 KM -> ₹15, After -> +₹10 each extra
-            const fee = dist <= 1 ? 15 : 15 + ((dist - 1) * 10);
+            // Rules: First 1 KM -> ₹15, After -> +₹10 each extra (rounded UP)
+            const fee = calculateDeliveryCharge(dist);
             setDeliveryCharge(fee);
         }
     }, [userData, cartItems]);
