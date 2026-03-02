@@ -100,7 +100,26 @@ export default function CheckoutScreen({ navigation, route }: any) {
             // const res = await fetch('http://localhost:3000/api/orders', { method: 'POST', body: JSON.stringify(orderPayloadSchema) });
             const systemOrderIdGenerated = 'ORD-20260228-001';
 
-            Alert.alert("Success", "Order successfully transmitted!");
+            // Webhook for order analytics and notifications to n8n
+            try {
+                const webhookData = new URLSearchParams();
+                webhookData.append('userId', mockUserPayload.userId);
+                webhookData.append('totalAmount', currentTotalAmount.toString());
+                webhookData.append('mobileNumber', mobileNumber);
+                webhookData.append('email', mockUserPayload.email);
+
+                await fetch("https://venkataomanand.app.n8n.cloud/webhook/foodsy-order", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/x-www-form-urlencoded",
+                    },
+                    body: webhookData.toString()
+                });
+            } catch (webhookErr) {
+                console.log("Webhook skipped or failed:", webhookErr);
+            }
+
+            Alert.alert("Success", "Order Confirmed Successfully ✅");
             navigation.navigate('Invoice', {
                 orderId: systemOrderIdGenerated,
                 orderPayload: orderPayloadSchema,
