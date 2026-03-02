@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useProduct } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
-import { Pencil, Trash2, Plus, PlusCircle, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag, Search, Building } from 'lucide-react';
+import { Pencil, Trash2, Plus, PlusCircle, RefreshCw, ShoppingBag, Package, Eye, EyeOff, Play, Tag, Search, Building, Lock } from 'lucide-react';
 import { db, storage } from '../firebase';
 import {
     collection,
@@ -69,6 +69,23 @@ export default function Admin() {
     // Search State
     const [orderSearchQuery, setOrderSearchQuery] = useState('');
     const [restaurantSearchQuery, setRestaurantSearchQuery] = useState('');
+
+    // Password Lock State
+    const [isLocked, setIsLocked] = useState(sessionStorage.getItem('adminAuth') !== 'true');
+    const [passwordInput, setPasswordInput] = useState('');
+    const [loginError, setLoginError] = useState(false);
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+        if (passwordInput === 'FoodsyA@2026') {
+            sessionStorage.setItem('adminAuth', 'true');
+            setIsLocked(false);
+            setLoginError(false);
+        } else {
+            setLoginError(true);
+            setPasswordInput('');
+        }
+    };
 
     // Utility Functions
     function calculateStats(ordersData) {
@@ -473,6 +490,41 @@ export default function Admin() {
             setUpdatingStore(false);
         }
     };
+
+    if (isLocked) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center p-4">
+                <div className="max-w-md w-full bg-white rounded-[32px] shadow-2xl p-8 border border-gray-100 text-center">
+                    <div className="w-20 h-20 bg-primary/10 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                        <Lock className="h-10 w-10 text-primary" />
+                    </div>
+                    <h1 className="text-2xl font-black text-gray-900 mb-2">Admin Security</h1>
+                    <p className="text-gray-500 font-medium mb-8 text-sm">Please verify your identity to access the dashboard.</p>
+
+                    <form onSubmit={handleLogin} className="space-y-4">
+                        <div className="relative group">
+                            <input
+                                type="password"
+                                value={passwordInput}
+                                onChange={(e) => { setPasswordInput(e.target.value); setLoginError(false); }}
+                                className={`w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 transition-all ${loginError ? 'ring-2 ring-red-500 bg-red-50/50' : 'focus:ring-primary/20'}`}
+                                placeholder="Enter Access Password"
+                                autoFocus
+                            />
+                            {loginError && <p className="text-red-500 text-[10px] font-black uppercase mt-2 tracking-widest animate-bounce">Incorrect Password</p>}
+                        </div>
+                        <button
+                            type="submit"
+                            className="w-full bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all shadow-xl shadow-gray-200"
+                        >
+                            Unlock Dashboard
+                        </button>
+                    </form>
+                    <p className="mt-8 text-[10px] font-black text-gray-300 uppercase tracking-widest">Foodsy Management Terminal</p>
+                </div>
+            </div>
+        );
+    }
 
     if (loading) return <div className="flex justify-center items-center h-screen"><RefreshCw className="h-8 w-8 animate-spin text-primary" /></div>;
 
