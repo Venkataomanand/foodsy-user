@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import Hero from '../components/Hero';
 import ProductCard from '../components/ProductCard';
+import RestaurantCard from '../components/RestaurantCard';
 import { useNavigate, Link } from 'react-router-dom';
 import { Tag, AlertCircle } from 'lucide-react';
 import { db } from '../firebase';
@@ -12,11 +13,9 @@ import CustomOrderModal from '../components/CustomOrderModal';
 const CATEGORY_GROUPS = [
     {
         title: "Delicious Food",
-        subtitle: "Biryanis, Pulavs, Desserts & more",
+        subtitle: "Tiffins, Desserts & more",
         items: [
-            { name: 'Biryanis', icon: '🍛', color: 'bg-orange-50', link: '/products?category=biryanis' },
             { name: 'Tiffins', icon: '🥗', color: 'bg-lime-50', link: '/products?category=tiffins' },
-            { name: 'Pulavs', icon: '🥘', color: 'bg-yellow-50', link: '/products?category=pulavs' },
             { name: 'Desserts', icon: '🍰', color: 'bg-pink-50', link: '/products?category=desserts' },
             { name: 'Milkshakes', icon: '🥤', color: 'bg-purple-50', link: '/products?category=milkshakes' },
             { name: 'Beverages', icon: '🍹', color: 'bg-cyan-50', link: '/products?category=beverages' },
@@ -52,7 +51,7 @@ const CATEGORY_GROUPS = [
 
 export default function Home() {
     const { currentUser } = useAuth();
-    const { storeOpen } = useProduct();
+    const { storeOpen, restaurants } = useProduct();
     const [offers, setOffers] = useState([]);
 
     useEffect(() => {
@@ -145,21 +144,27 @@ export default function Home() {
                 </section>
             )}
 
-            {/* Food Section */}
+            {/* Restaurants Section (Replacing old Food Categories) */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-                <div className="flex items-center justify-between mb-6">
-                    <h2 className="text-2xl font-black text-gray-900">Our Menu</h2>
-                    <Link to="/products" className="text-primary font-bold text-sm hover:underline italic">View Full Menu</Link>
+                <div className="flex items-center justify-between mb-8">
+                    <div>
+                        <h2 className="text-3xl font-black text-gray-900 leading-tight">Popular Restaurants</h2>
+                        <p className="text-gray-500 font-medium italic mt-1">Order from the best kitchens in town</p>
+                    </div>
+                    <Link to="/products?category=food" className="text-primary font-bold text-sm hover:underline italic bg-primary/5 px-4 py-2 rounded-xl">View All Restaurants</Link>
                 </div>
-                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
-                    {CATEGORY_GROUPS[0].items.map((cat) => (
-                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
-                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
-                                {cat.icon}
-                            </div>
-                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
-                        </Link>
+
+                <div className="flex overflow-x-auto pb-8 scrollbar-hide space-x-6 -mx-4 px-4 sm:mx-0 sm:px-0">
+                    {restaurants.map(res => (
+                        <div key={res.id} className="flex-shrink-0 w-[280px] md:w-[320px] transform hover:scale-[1.02] transition-all">
+                            <RestaurantCard restaurant={res} />
+                        </div>
                     ))}
+                    {restaurants.length === 0 && (
+                        <div className="w-full py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200 text-center">
+                            <p className="text-gray-400 font-medium">No restaurants found yet.</p>
+                        </div>
+                    )}
                 </div>
             </section>
 
@@ -224,35 +229,7 @@ export default function Home() {
                 </div>
             </section>
 
-            {/* Featured Section */}
-            <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                <div className="flex justify-between items-center mb-8">
-                    <div>
-                        <h2 className="text-2xl md:text-3xl font-black text-gray-900 leading-tight">Authentic Biryani Combos</h2>
-                        <p className="mt-1 text-gray-500 font-medium italic">Save more with our curated meals</p>
-                    </div>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-3xl p-8 text-white shadow-xl hover:shadow-2xl transition-all group overflow-hidden relative">
-                        <div className="relative z-10">
-                            <h3 className="text-2xl font-black mb-2">Combo 1</h3>
-                            <p className="text-white/80 font-bold text-xl mb-6">Biryani + Beverage</p>
-                            <p className="text-4xl font-black mb-8">₹249</p>
-                            <Link to="/products?category=combos" className="bg-white text-orange-600 px-6 py-3 rounded-xl font-black hover:bg-orange-50 transition-colors">Order Now</Link>
-                        </div>
-                        <div className="absolute -bottom-4 -right-4 text-9xl opacity-20 transform group-hover:scale-110 transition-transform duration-500 leading-none">🍱</div>
-                    </div>
-                    <div className="bg-gradient-to-br from-purple-600 to-blue-600 rounded-3xl p-8 text-white shadow-xl hover:shadow-2xl transition-all group overflow-hidden relative">
-                        <div className="relative z-10">
-                            <h3 className="text-2xl font-black mb-2">Combo 2</h3>
-                            <p className="text-white/80 font-bold text-xl mb-6">Biryani + Milkshake</p>
-                            <p className="text-4xl font-black mb-8">₹299</p>
-                            <Link to="/products?category=combos" className="bg-white text-purple-600 px-6 py-3 rounded-xl font-black hover:bg-purple-50 transition-colors">Order Now</Link>
-                        </div>
-                        <div className="absolute -bottom-4 -right-4 text-9xl opacity-20 transform group-hover:scale-110 transition-transform duration-500 leading-none">🎁</div>
-                    </div>
-                </div>
-            </section>
+
         </div>
     );
 }
