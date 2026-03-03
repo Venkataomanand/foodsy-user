@@ -144,27 +144,21 @@ export default function Home() {
                 </section>
             )}
 
-            {/* Restaurants Section (Replacing old Food Categories) */}
+            {/* Food Section */}
             <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-12">
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h2 className="text-3xl font-black text-gray-900 leading-tight">Popular Restaurants</h2>
-                        <p className="text-gray-500 font-medium italic mt-1">Order from the best kitchens in town</p>
-                    </div>
-                    <Link to="/products?category=food" className="text-primary font-bold text-sm hover:underline italic bg-primary/5 px-4 py-2 rounded-xl">View All Restaurants</Link>
+                <div className="flex items-center justify-between mb-6">
+                    <h2 className="text-2xl font-black text-gray-900">Delicious Food</h2>
+                    <Link to="/products?category=food" className="text-primary font-bold text-sm hover:underline italic">View Restaurants</Link>
                 </div>
-
-                <div className="flex overflow-x-auto pb-8 scrollbar-hide space-x-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-                    {restaurants.map(res => (
-                        <div key={res.id} className="flex-shrink-0 w-[280px] md:w-[320px] transform hover:scale-[1.02] transition-all">
-                            <RestaurantCard restaurant={res} />
-                        </div>
+                <div className="flex overflow-x-auto pb-4 scrollbar-hide space-x-6">
+                    {CATEGORY_GROUPS[0].items.map((cat) => (
+                        <Link key={cat.name} to={cat.link} className="flex-shrink-0 flex flex-col items-center group">
+                            <div className={`w-20 h-20 md:w-24 md:h-24 ${cat.color} rounded-2xl flex items-center justify-center text-3xl md:text-4xl shadow-sm group-hover:shadow-md group-hover:-translate-y-1 transition-all duration-300`}>
+                                {cat.icon}
+                            </div>
+                            <span className="mt-3 text-xs md:text-sm font-bold text-gray-700 group-hover:text-primary transition-colors text-center">{cat.name}</span>
+                        </Link>
                     ))}
-                    {restaurants.length === 0 && (
-                        <div className="w-full py-12 bg-gray-50 rounded-3xl border border-dashed border-gray-200 text-center">
-                            <p className="text-gray-400 font-medium">No restaurants found yet.</p>
-                        </div>
-                    )}
                 </div>
             </section>
 
