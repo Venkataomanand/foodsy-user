@@ -46,7 +46,7 @@ export default function Admin() {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [product, setProduct] = useState({
-        name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', restaurantId: ''
+        name: '', price: '', category: 'Tiffins', description: '', emoji: '🥑', image: '', unit: '', restaurantId: ''
     });
 
     // Restaurant Form State
@@ -265,7 +265,7 @@ export default function Admin() {
         // Switch to products tab and pre-fill the restaurantId
         setActiveTab('products');
         setIsEditing(false);
-        setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', options: '', restaurantId: res.id });
+        setProduct({ name: '', price: '', category: 'Tiffins', description: '', emoji: '🥑', image: '', unit: '', options: '', restaurantId: res.id });
         // Scroll to top so the form is visible
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
@@ -428,7 +428,7 @@ export default function Admin() {
             alert(`Item ${isEditing ? 'Updated' : 'Added'} Successfully!`);
 
             // 4. Reset Form
-            setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', options: '', restaurantId: '' });
+            setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Tiffins', description: '', emoji: '🥑', image: '', unit: '', options: '', restaurantId: '' });
             setImageFile(null);
             setUploadProgress(0);
             setIsEditing(false);
@@ -554,7 +554,7 @@ export default function Admin() {
             </div>
 
             <div className="flex overflow-x-auto space-x-4 mb-8 pb-2">
-                <button onClick={() => { setActiveTab('products'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Biryanis', description: '', emoji: '🥑', image: '', unit: '', restaurantId: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
+                <button onClick={() => { setActiveTab('products'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Tiffins', description: '', emoji: '🥑', image: '', unit: '', restaurantId: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'products' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Package className="h-5 w-5 mr-2" /> Products</button>
                 <button onClick={() => setActiveTab('restaurants')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'restaurants' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Building className="h-5 w-5 mr-2" /> Restaurants</button>
                 <button onClick={() => { setActiveTab('combos'); setIsEditing(false); setProduct({ name: '', price: '', category: 'Combos', description: '', emoji: '🎁', image: '', unit: '', restaurantId: '' }); }} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'combos' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><span className="mr-2">🎁</span> Combos</button>
                 <button onClick={() => setActiveTab('offers')} className={`px-4 py-2 rounded-xl font-bold flex items-center whitespace-nowrap transition-all ${activeTab === 'offers' ? 'bg-primary text-white' : 'bg-white text-gray-500 hover:bg-gray-50 border border-gray-100'}`}><Tag className="h-5 w-5 mr-2" /> Offers</button>
@@ -609,12 +609,10 @@ export default function Admin() {
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Price (₹)</label><input type="number" required value={product.price} onChange={e => setProduct({ ...product, price: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" /></div>
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Category</label>{activeTab === 'combos' ? <div className="bg-gray-100 p-4 rounded-2xl text-sm font-bold text-gray-400">Combos</div> : <select value={product.category} onChange={e => setProduct({ ...product, category: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20">
                                         <optgroup label="Food">
-                                            <option value="Biryanis">Biryanis</option>
-                                            <option value="Pulavs">Pulavs</option>
+                                            <option value="Tiffins">Tiffins</option>
                                             <option value="Desserts">Desserts</option>
                                             <option value="Milkshakes">Milkshakes</option>
                                             <option value="Beverages">Beverages</option>
-                                            <option value="Tiffins">Tiffins</option>
                                         </optgroup>
                                         <optgroup label="Vegetables">
                                             <option value="Fruits">Fruits</option>
@@ -674,7 +672,7 @@ export default function Admin() {
                                     </div>
                                 </div>
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Description</label><textarea rows={3} value={product.description} onChange={e => setProduct({ ...product, description: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-medium" placeholder="Tasty ingredients..." /></div>
-                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🥑', unit: '', options: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
+                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Tiffins', description: '', emoji: '🥑', unit: '', options: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
                             </form>
                         </div>
                     </div>

@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import CustomOrderModal from '../components/CustomOrderModal';
 import { motion } from 'framer-motion';
 const CATEGORY_STRUCTURE = {
-    'Food': ['Biryanis', 'Tiffins', 'Pulavs', 'Desserts', 'Milkshakes', 'Beverages'],
+    'Food': [],
     'Vegetables': ['Fruits', 'Green Leafy Vegetables', 'Vegetables'],
     'Grocery': ['Rice & Dals', 'Oils & Spices', 'Snacks & Drinks', 'Essentials'],
     'Combos': []
@@ -85,8 +85,14 @@ export default function Products() {
             const restaurant = restaurants.find(r => r.id === product.restaurantId);
             // Hide product if restaurant exists but is closed
             if (restaurant && restaurant.isOpen === false) return false;
-            // Also enforce restaurant matching if specific restaurantId filtered
-            if (restaurantId && product.restaurantId !== restaurantId) return false;
+
+            // If we are looking for a specific restaurant, ensure it matches
+            if (restaurantId) {
+                if (product.restaurantId !== restaurantId) return false;
+            } else {
+                // If we are browsing general menu, HIDE restaurant-only items
+                return false;
+            }
         } else if (restaurantId) {
             // If filtering by restaurant but product has none, hide it
             return false;
@@ -233,8 +239,31 @@ export default function Products() {
                 </div>
             </div>
 
-            {/* Restaurants Strip — shown when browsing Food or All, no restaurant selected */}
-            {!restaurantId && (activeMainCategory === 'Food' || activeMainCategory === 'All') && restaurants.length > 0 && (
+            {/* Food Mode: Show Restaurants Grid when no restaurant is selected */}
+            {!restaurantId && activeMainCategory === 'Food' && (
+                <div className="mb-20">
+                    <div className="flex items-center gap-3 mb-8">
+                        <div className="bg-primary/10 p-3 rounded-2xl">
+                            <Building className="h-8 w-8 text-primary" />
+                        </div>
+                        <div>
+                            <h2 className="text-3xl font-black text-gray-900 leading-tight">Popular Restaurants</h2>
+                            <p className="text-sm font-bold text-gray-400 uppercase tracking-widest mt-1">Order from your favorites</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        {restaurants.map(res => (
+                            <div key={res.id} className="transform hover:scale-[1.02] transition-all">
+                                <RestaurantCard restaurant={res} />
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Restaurants Strip for "All" tab */}
+            {!restaurantId && activeMainCategory === 'All' && restaurants.length > 0 && (
                 <div className="mb-10">
                     <div className="flex items-center gap-2 mb-5">
                         <Building className="h-6 w-6 text-primary" />
@@ -252,13 +281,16 @@ export default function Products() {
                 </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {filteredProducts.map(product => (
-                    <ProductCard key={product.id} product={product} />
-                ))}
-            </div>
+            {/* Product Grid - Hide when in generic "Food" mode (no restaurant selected) */}
+            {!(activeMainCategory === 'Food' && !restaurantId) && (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {filteredProducts.map(product => (
+                        <ProductCard key={product.id} product={product} />
+                    ))}
+                </div>
+            )}
 
-            {filteredProducts.length === 0 && (
+            {filteredProducts.length === 0 && !(activeMainCategory === 'Food' && !restaurantId) && (
                 <div className="text-center py-20 bg-gray-50 rounded-3xl border border-dashed border-gray-200">
                     <p className="text-gray-400 text-lg font-medium">No products found for your selection.</p>
                 </div>
