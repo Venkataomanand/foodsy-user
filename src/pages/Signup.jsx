@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader, User, MapPin, Building2, ArrowRight } from 'lucide-react';
+import { Mail, Lock, Loader, User, MapPin, Building2, ArrowRight, Target, CheckCircle } from 'lucide-react';
 
 export default function Signup() {
     const [step, setStep] = useState(1);
@@ -11,6 +11,8 @@ export default function Signup() {
     const [username, setUsername] = useState('');
     const [address, setAddress] = useState('');
     const [city, setCity] = useState('Kakinada');
+    const [coords, setCoords] = useState(null);
+    const [locating, setLocating] = useState(false);
 
     // Step 2 fields
     const [password, setPassword] = useState('');
@@ -29,6 +31,32 @@ export default function Signup() {
             navigator.vibrate(200); // Haptic feedback
         }
         setTimeout(() => setShake(false), 500);
+    };
+
+    const handleGetLocation = () => {
+        if (!navigator.geolocation) {
+            setError("Geolocation is not supported by your browser");
+            return;
+        }
+
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                setCoords({
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                });
+                setLocating(false);
+                // Success haptic
+                if (navigator.vibrate) navigator.vibrate(50);
+            },
+            (err) => {
+                console.error(err);
+                setError("Unable to retrieve your location. Please type your address manually.");
+                setLocating(false);
+            },
+            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+        );
     };
 
     const handleNextStep = (e) => {
@@ -81,7 +109,7 @@ export default function Signup() {
         try {
             setError('');
             setLoading(true);
-            await signup(email, password, username, address, city);
+            await signup(email, password, username, address, city, coords);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Success haptics
             navigate('/');
         } catch (err) {
@@ -185,10 +213,24 @@ export default function Signup() {
                                         required
                                         value={address}
                                         onChange={(e) => setAddress(e.target.value)}
-                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
+                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 pr-12 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
                                         placeholder="123 Main St, Apt 4"
                                     />
+                                    <button
+                                        type="button"
+                                        onClick={handleGetLocation}
+                                        disabled={locating}
+                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-orange-400 hover:text-orange-600 transition-colors"
+                                        title="Use Live Location"
+                                    >
+                                        <Target className={`h-5 w-5 ${locating ? 'animate-ping' : ''}`} />
+                                    </button>
                                 </div>
+                                {coords && (
+                                    <p className="mt-1 text-[10px] font-bold text-green-600 flex items-center">
+                                        <CheckCircle className="h-3 w-3 mr-1" /> GPS Coordinates Captured for Delivery
+                                    </p>
+                                )}
                             </div>
 
                             <div>

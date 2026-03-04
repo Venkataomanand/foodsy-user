@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader, User } from 'lucide-react';
+import { Mail, Lock, Loader, User, Target } from 'lucide-react';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -9,8 +9,28 @@ export default function Login() {
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [loading, setLoading] = useState(false);
+    const [locating, setLocating] = useState(false);
+    const [coords, setCoords] = useState(null);
     const { login } = useAuth();
     const navigate = useNavigate();
+
+    const handleGetLocation = () => {
+        if (!navigator.geolocation) return;
+        setLocating(true);
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                const newCoords = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                setCoords(newCoords);
+                setLocating(false);
+                localStorage.setItem('temp_location', JSON.stringify(newCoords));
+            },
+            () => setLocating(false),
+            { enableHighAccuracy: true }
+        );
+    };
 
     async function handleSubmit(e) {
         e.preventDefault();
@@ -60,9 +80,17 @@ export default function Login() {
                                     required
                                     value={username}
                                     onChange={(e) => setUsername(e.target.value)}
-                                    className="focus:ring-primary focus:border-primary block w-full pl-10 sm:text-sm border-gray-300 rounded-md py-2 border"
+                                    className="focus:ring-primary focus:border-primary block w-full pl-10 pr-10 sm:text-sm border-gray-300 rounded-md py-2 border"
                                     placeholder="your_username"
                                 />
+                                <button
+                                    type="button"
+                                    onClick={handleGetLocation}
+                                    className="absolute inset-y-0 right-0 pr-3 flex items-center"
+                                    title="Get Live Location"
+                                >
+                                    <Target className={`h-4 w-4 ${locating ? 'animate-ping text-primary' : 'text-gray-400'}`} />
+                                </button>
                             </div>
                         </div>
 

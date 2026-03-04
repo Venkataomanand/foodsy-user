@@ -20,7 +20,7 @@ export function AuthProvider({ children }) {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    async function signup(email, password, username, address, city) {
+    async function signup(email, password, username, address, city, coords) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         if (username) {
             await updateProfile(userCredential.user, { displayName: username });
@@ -60,6 +60,8 @@ export function AuthProvider({ children }) {
             email: email,
             address: address || "",
             city: city || "Kakinada",
+            latitude: coords?.lat || null,
+            longitude: coords?.lng || null,
             createdAt: new Date().toISOString()
         };
 
