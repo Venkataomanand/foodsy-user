@@ -259,7 +259,11 @@ export default function Checkout() {
                 paymentMethod: 'Cash on Delivery',
                 paymentStatus: 'Pending',
                 transactionId: null,
-                // Location Intelligence Data
+                // GPS fields at top-level for admin panel access
+                latitude: userData?.latitude || null,
+                longitude: userData?.longitude || null,
+                accuracy: userData?.accuracy || null,
+                // Location Intelligence Data (nested - legacy)
                 locationIntelligence: {
                     latitude: userData?.latitude || null,
                     longitude: userData?.longitude || null,
