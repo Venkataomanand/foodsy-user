@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useProduct } from '../context/ProductContext';
-import { CheckCircle, Truck, Wallet, Banknote, CreditCard, MapPin, Landmark } from 'lucide-react';
+import { CheckCircle, Truck, Wallet, Banknote, CreditCard, MapPin, Landmark, AlertTriangle } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 
@@ -30,6 +30,7 @@ export default function Checkout() {
     const [deliveryDistance, setDeliveryDistance] = useState(0);
     const [deliveryCharge, setDeliveryCharge] = useState(0);
     const [deliveryDuration, setDeliveryDuration] = useState(0);
+    const [distanceError, setDistanceError] = useState(false);
 
     const AREAS = [
         { name: "Sarpavaram", distance: 3, lat: 16.985, lng: 82.250 },
@@ -98,7 +99,8 @@ export default function Checkout() {
             };
         } catch (error) {
             console.error("Distance Engine Error:", error);
-            return { distance: 5, duration: 15, charge: 60, status: "DISTANCE_API_FAILED" };
+            // Swiggy Logic: NEVER approximate or use 5km default.
+            return { distance: 0, duration: 0, charge: 0, status: "ERROR" };
         }
     };
 
@@ -133,8 +135,16 @@ export default function Checkout() {
                 }
 
                 const results = await Promise.all(distancePromises);
-                const charges = results.map(r => r.charge);
-                const distances = results.map(r => r.distance);
+
+                const validResults = results.filter(r => r.status === 'SUCCESS');
+                if (validResults.length !== results.length || validResults.length === 0) {
+                    setDistanceError(true);
+                } else {
+                    setDistanceError(false);
+                }
+
+                const charges = validResults.map(r => r.charge);
+                const distances = validResults.map(r => r.distance);
                 const maxCharge = charges.length > 0 ? Math.max(...charges) : 0;
                 const maxDist = distances.length > 0 ? Math.max(...distances) : 0;
 
@@ -563,20 +573,28 @@ export default function Checkout() {
 
                     <div className="border-t border-gray-200 pt-6 flex justify-between items-center">
                         <div className="flex flex-col">
-                            <span className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1">
-                                <MapPin className="h-3 w-3" /> Est. Road Distance: {deliveryDistance.toFixed(2)} KM
-                            </span>
-                            <div className="flex items-center gap-1">
-                                <span className="text-sm text-gray-500">Delivery Charge: ₹{deliveryCharge.toFixed(2)}</span>
-                                <span className="text-[9px] text-primary bg-primary/5 px-1 rounded font-black uppercase">
-                                    (₹20 + ₹10/km)
+                            {distanceError ? (
+                                <span className="text-xs font-black text-red-500 uppercase flex items-center gap-1">
+                                    <AlertTriangle className="h-4 w-4" /> Distance Calculation Failed
                                 </span>
-                            </div>
-                            <span className="text-lg font-bold text-gray-900 leading-tight">Total: ₹{(cartTotal + deliveryCharge).toFixed(2)}</span>
+                            ) : (
+                                <>
+                                    <span className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1">
+                                        <MapPin className="h-3 w-3" /> Est. Road Distance: {deliveryDistance.toFixed(2)} KM
+                                    </span>
+                                    <div className="flex items-center gap-1">
+                                        <span className="text-sm text-gray-500">Delivery Charge: ₹{deliveryCharge.toFixed(2)}</span>
+                                        <span className="text-[9px] text-primary bg-primary/5 px-1 rounded font-black uppercase">
+                                            (₹20 + ₹10/km)
+                                        </span>
+                                    </div>
+                                    <span className="text-lg font-bold text-gray-900 leading-tight">Total: ₹{(cartTotal + deliveryCharge).toFixed(2)}</span>
+                                </>
+                            )}
                         </div>
                         <button
                             type="submit"
-                            disabled={loading}
+                            disabled={loading || distanceError || deliveryDistance === 0}
                             className="inline-flex items-center px-8 py-3.5 border border-transparent text-base font-black rounded-2xl shadow-xl text-white bg-gray-900 hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-all active:scale-95"
                         >
                             {loading ? 'Processing...' : 'Place Order'}
