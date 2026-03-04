@@ -68,14 +68,18 @@ export default function Checkout() {
     };
 
     const calculateHaversine = (lat1, lon1, lat2, lon2) => {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
         const R = 6371; // Earth's radius in KM
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const dLat = (Number(lat2) - Number(lat1)) * Math.PI / 180;
+        const dLon = (Number(lon2) - Number(lon1)) * Math.PI / 180;
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.cos(Number(lat1) * Math.PI / 180) * Math.cos(Number(lat2) * Math.PI / 180) *
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return R * c; // Actual distance in KM (float)
+        const straightDist = R * c;
+        // Adjusted multiplier (1.5x) to convert straight-line to road distance.
+        // This accounts for the circuitous route patterns and bridge crossings in Kakinada.
+        return straightDist * 1.5;
     };
 
     // Unified calculation logic: 1st KM = 20, Subsequent = 10/KM (rounded up)
@@ -97,27 +101,23 @@ export default function Checkout() {
             const userLng = Number(userData.longitude) || (AREAS.find(a => userData.address?.toLowerCase().includes(a.name.toLowerCase()))?.lng) || 82.242;
 
             // Source Location
-            let sourceLat = 16.974; // Default to JNTUK Area
-            let sourceLng = 82.242;
+            // Source Selection: Calculate distance from ALL restaurants in cart and take the MAXIMUM
+            // This ensures long-distance orders are charged correctly even if multiple items are present
+            const dists = cartItems.map(item => {
+                const res = restaurants.find(r => r.id === item.restaurantId);
+                const rLat = res?.latitude ? Number(res.latitude) : 16.974;
+                const rLng = res?.longitude ? Number(res.longitude) : 82.242;
+                return calculateHaversine(rLat, rLng, userLat, userLng);
+            });
 
             if (hasVeggie) {
-                sourceLat = VEG_HUB.lat;
-                sourceLng = VEG_HUB.lng;
-            } else if (cartItems.length > 0) {
-                // Find the restaurant for the first item in cart
-                const firstItemResId = cartItems[0].restaurantId;
-                const activeRes = restaurants.find(r => r.id === firstItemResId);
-                if (activeRes && activeRes.latitude && activeRes.longitude) {
-                    sourceLat = Number(activeRes.latitude);
-                    sourceLng = Number(activeRes.longitude);
-                }
+                dists.push(calculateHaversine(VEG_HUB.lat, VEG_HUB.lng, userLat, userLng));
             }
 
-            const dist = calculateHaversine(sourceLat, sourceLng, userLat, userLng);
-            console.log("🚚 Delivery Calculation:", { source: [sourceLat, sourceLng], dest: [userLat, userLng], dist });
-            setDeliveryDistance(dist);
+            const maxDist = dists.length > 0 ? Math.max(...dists) : 0;
+            setDeliveryDistance(maxDist);
 
-            const fee = calculateDeliveryFee(dist);
+            const fee = calculateDeliveryFee(maxDist);
             setDeliveryCharge(fee);
         }
     }, [userData, cartItems, restaurants]);
@@ -337,7 +337,7 @@ export default function Checkout() {
                                     <div className="flex justify-between text-sm font-medium mb-3">
                                         <div>
                                             <span className="text-gray-600 block">Logistics & Delivery</span>
-                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Precise Distance: {orderData.distance?.toFixed(2)} KM</span>
+                                            <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest bg-gray-900/50 px-2 py-0.5 rounded">Est. Road Distance: {orderData.distance?.toFixed(2)} KM</span>
                                         </div>
                                         <span className="text-gray-900">₹{orderData.deliveryFee.toFixed(2)}</span>
                                     </div>
@@ -483,8 +483,8 @@ export default function Checkout() {
 
                     <div className="border-t border-gray-200 pt-6 flex justify-between items-center">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
-                                Distance: {deliveryDistance.toFixed(2)} KM
+                            <span className="text-xs font-black text-primary uppercase tracking-widest flex items-center gap-1">
+                                <MapPin className="h-3 w-3" /> Est. Road Distance: {deliveryDistance.toFixed(2)} KM
                             </span>
                             <div className="flex items-center gap-1">
                                 <span className="text-sm text-gray-500">Delivery Charge: ₹{deliveryCharge.toFixed(2)}</span>
@@ -492,18 +492,18 @@ export default function Checkout() {
                                     (₹20 + ₹10/km)
                                 </span>
                             </div>
-                            <span className="text-lg font-bold">Total: ₹{(cartTotal + deliveryCharge).toFixed(2)}</span>
+                            <span className="text-lg font-bold text-gray-900 leading-tight">Total: ₹{(cartTotal + deliveryCharge).toFixed(2)}</span>
                         </div>
                         <button
                             type="submit"
                             disabled={loading}
-                            className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-primary hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50"
+                            className="inline-flex items-center px-8 py-3.5 border border-transparent text-base font-black rounded-2xl shadow-xl text-white bg-gray-900 hover:bg-primary focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 transition-all active:scale-95"
                         >
                             {loading ? 'Processing...' : 'Place Order'}
                         </button>
                     </div>
                 </form>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 }
