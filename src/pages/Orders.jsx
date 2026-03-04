@@ -96,7 +96,7 @@ export default function Orders() {
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
                     <p className="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Spent</p>
                     <p className="text-3xl font-black text-primary mt-2">
-                        ₹{orders.reduce((sum, order) => sum + (order.total || 0), 0).toFixed(2)}
+                        ₹{orders.reduce((sum, order) => sum + (order.totalAmount || order.total || 0), 0).toFixed(2)}
                     </p>
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100">
@@ -124,7 +124,7 @@ export default function Orders() {
                                         <p className="text-sm text-gray-500">{order.date}</p>
                                     </div>
                                     <div className="text-right">
-                                        <p className="text-lg font-bold text-primary">₹{order.total.toFixed(2)}</p>
+                                        <p className="text-lg font-bold text-primary">₹{(order.totalAmount || order.total || 0).toFixed(2)}</p>
                                     </div>
                                 </div>
 
@@ -155,15 +155,19 @@ export default function Orders() {
                             <div className="p-6">
                                 <div className="mb-8">
                                     <p className="font-medium text-gray-700 mb-2">Items:</p>
-                                    <p className="text-gray-600">
-                                        {order.items.map((i, idx) => (
-                                            <span key={idx}>
-                                                {i.name} (x{i.quantity})
-                                                {i.selectedOption && <span className="text-xs font-black text-primary ml-1">[{i.selectedOption}]</span>}
-                                                {idx < order.items.length - 1 ? ', ' : ''}
-                                            </span>
+                                    <div className="space-y-2">
+                                        {(order.cartItems || order.items || []).map((i, idx) => (
+                                            <div key={idx} className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
+                                                <div>
+                                                    <span className="font-bold text-gray-900">{i.name}</span>
+                                                    {i.selectedOption && <span className="text-xs font-black text-primary ml-1">[{i.selectedOption}]</span>}
+                                                    {i.unit && <span className="text-xs text-gray-400 ml-1">({i.unit})</span>}
+                                                    {i.restaurantName && <p className="text-[10px] text-gray-400 uppercase font-bold tracking-tighter">@{i.restaurantName}</p>}
+                                                </div>
+                                                <span className="font-black text-gray-500">x{i.quantity}</span>
+                                            </div>
                                         ))}
-                                    </p>
+                                    </div>
                                 </div>
 
                                 {/* Progress Bar */}

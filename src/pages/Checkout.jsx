@@ -24,7 +24,8 @@ export default function Checkout() {
     const [orderSuccess, setOrderSuccess] = useState(false);
     const [orderData, setOrderData] = useState(null);
     const [formData, setFormData] = useState({
-        phone: ''
+        phone: '',
+        cookingRequest: ''
     });
     const [deliveryDistance, setDeliveryDistance] = useState(0);
     const [deliveryCharge, setDeliveryCharge] = useState(0);
@@ -79,10 +80,10 @@ export default function Checkout() {
 
     const calculateDeliveryCharge = (dist) => {
         if (dist === 0) return 0;
-        if (dist <= 1) return 15;
-        // ₹15 for first km + ₹10 for every additional km
+        if (dist <= 1) return 20;
+        // ₹20 for first km + ₹10 for every additional km
         const extraKm = Math.ceil(dist - 1);
-        return 15 + (extraKm * 10);
+        return 20 + (extraKm * 10);
     };
 
     useEffect(() => {
@@ -194,6 +195,7 @@ export default function Checkout() {
                 subtotal: cartTotal,
                 deliveryFee: deliveryCharge,
                 totalAmount: finalTotal,
+                cookingRequest: formData.cookingRequest || '',
                 status: 'Confirmed',
                 createdAt: serverTimestamp(),
                 date: new Date().toLocaleDateString(),
@@ -441,6 +443,16 @@ export default function Checkout() {
                                     placeholder="e.g. 9876543210"
                                     pattern="[0-9]{10}"
                                     title="10-digit phone number required"
+                                />
+                            </div>
+                            <div className="sm:col-span-6">
+                                <label className="block text-sm font-black uppercase text-gray-400 mb-1">Cooking Request (Optional)</label>
+                                <textarea
+                                    value={formData.cookingRequest}
+                                    onChange={(e) => setFormData({ ...formData, cookingRequest: e.target.value })}
+                                    className="mt-1 block w-full border border-gray-300 rounded-2xl shadow-sm py-3 px-4 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm"
+                                    placeholder="e.g. Make it spicy, No onions, etc."
+                                    rows={3}
                                 />
                             </div>
                         </div>
