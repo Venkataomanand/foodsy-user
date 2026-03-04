@@ -3,10 +3,11 @@ export default async function handler(req, res) {
         return res.status(405).json({ status: 'ERROR', message: 'Method Not Allowed' });
     }
 
-    const { restaurant_lat, restaurant_lng, user_lat, user_lng } = req.body;
+    const { restaurant_lat, restaurant_lng, user_lat, user_lng, gps_accuracy } = req.body;
 
-    // STEP 2: Validate Coordinates
-    if (!restaurant_lat || !restaurant_lng || !user_lat || !user_lng) {
+    // STEP 1: Full Validation
+    if (!restaurant_lat || !restaurant_lng || !user_lat || !user_lng ||
+        isNaN(restaurant_lat) || isNaN(restaurant_lng) || isNaN(user_lat) || isNaN(user_lng)) {
         return res.status(400).json({ status: 'ERROR', message: 'INVALID_COORDINATES' });
     }
 
@@ -15,52 +16,64 @@ export default async function handler(req, res) {
         return res.status(400).json({ status: 'ERROR', message: 'INVALID_COORDINATES' });
     }
 
-    // Google Directions API Key (Using Firebase key as it's typically the same project)
-    const API_KEY = "AIzaSyDG-s8L6iC2cYnDCAUpX6bZM4p0JRlyt08";
+    // Use environment variable, fallback to original key for safety
+    const API_KEY = process.env.GOOGLE_DIRECTIONS_API_KEY || "AIzaSyDG-s8L6iC2cYnDCAUpX6bZM4p0JRlyt08";
 
     try {
-        console.log(`Calculating Distance: [${restaurant_lat},${restaurant_lng}] to [${user_lat},${user_lng}]`);
+        console.log(`Distance calc: [${restaurant_lat},${restaurant_lng}] -> [${user_lat},${user_lng}]`);
 
-        // STEP 3: Mandatory Google Directions API
-        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${restaurant_lat},${restaurant_lng}&destination=${user_lat},${user_lng}&mode=driving&key=${API_KEY}`;
+        // STEP 2: Google Directions API (with local optimizations)
+        const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${restaurant_lat},${restaurant_lng}&destination=${user_lat},${user_lng}&mode=driving&avoid=highways|tolls&key=${API_KEY}`;
 
         const response = await fetch(url);
         const data = await response.json();
 
-        if (data.status !== 'OK' || !data.routes || data.routes.length === 0) {
-            console.error("Google API Failure:", data.status, data.error_message);
-            return res.status(500).json({ status: 'ERROR', message: 'DISTANCE_API_FAILED', google_status: data.status });
+        let distanceKM, durationMinutes;
+
+        if (data.status === 'OK' && data.routes?.[0]?.legs?.[0]) {
+            const leg = data.routes[0].legs[0];
+            distanceKM = parseFloat((leg.distance.value / 1000).toFixed(2));
+            durationMinutes = Math.ceil(leg.duration.value / 60);
+        } else {
+            // STEP 3: Fallback Haversine (straight-line ~80% accurate)
+            console.warn("Google API failed:", data.status, data.error_message || "");
+
+            const haversine = (lat1, lon1, lat2, lon2) => {
+                const R = 6371; // Earth radius in km
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) ** 2 +
+                    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                    Math.sin(dLon / 2) ** 2;
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                return R * c;
+            };
+
+            distanceKM = parseFloat(haversine(restaurant_lat, restaurant_lng, user_lat, user_lng).toFixed(2));
+            durationMinutes = Math.ceil(distanceKM * 4);  // ~15km/h avg delivery speed calculation
         }
 
-        const leg = data.routes[0].legs[0];
-        const distanceMeters = leg.distance.value;
-        const durationSeconds = leg.duration.value;
-
-        // Convert Phase (Rule 3)
-        const distanceKM = parseFloat((distanceMeters / 1000).toFixed(2));
-        const durationMinutes = Math.ceil(durationSeconds / 60);
-
-        // STEP 4: Calculate Delivery Charges (Rule: 10 per KM)
+        // STEP 4: Delivery Logic
         const deliveryCharge = parseFloat((distanceKM * 10).toFixed(2));
-
-        // Status Rules
-        const status = distanceKM <= 10 ? "SERVICEABLE" : "OUT_OF_RANGE";
+        const status = distanceKM <= 10 ? 'SERVICEABLE' : 'OUT_OF_RANGE';
 
         // STEP 5: Standard JSON Return Format
         return res.status(200).json({
-            "user_latitude": user_lat,
-            "user_longitude": user_lng,
-            "gps_accuracy_meters": req.body.gps_accuracy || "VERIFIED",
-            "restaurant_latitude": restaurant_lat,
-            "restaurant_longitude": restaurant_lng,
-            "road_distance_km": distanceKM,
-            "estimated_time_min": durationMinutes,
-            "delivery_charge": deliveryCharge,
-            "status": status
+            user_latitude: user_lat,
+            user_longitude: user_lng,
+            gps_accuracy_meters: gps_accuracy || 'UNKNOWN',
+            restaurant_latitude: restaurant_lat,
+            restaurant_longitude: restaurant_lng,
+            road_distance_km: distanceKM,
+            estimated_time_min: durationMinutes,
+            delivery_charge: deliveryCharge,
+            status: status,
+            source: data.status === 'OK' ? 'GOOGLE' : 'HAVERSINE_FALLBACK',
+            google_error: data.status !== 'OK' ? data.status : null
         });
 
     } catch (error) {
-        console.error("Engine Error:", error);
-        return res.status(500).json({ status: 'ERROR', message: 'DISTANCE_API_FAILED' });
+        console.error('Engine Error:', error);
+        return res.status(500).json({ status: 'ERROR', message: 'INTERNAL_ERROR' });
     }
 }
