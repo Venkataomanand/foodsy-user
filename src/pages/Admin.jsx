@@ -46,8 +46,11 @@ export default function Admin() {
     const [isEditing, setIsEditing] = useState(false);
     const [editId, setEditId] = useState(null);
     const [product, setProduct] = useState({
-        name: '', price: '', category: 'Tiffins', description: '', emoji: '🥑', image: '', unit: '', restaurantId: ''
+        name: '', price: '', category: 'Biryanis', description: '', emoji: '🍲', image: '', unit: '', restaurantId: ''
     });
+
+    const [productSearchQuery, setProductSearchQuery] = useState('');
+    const [selectedListingCategory, setSelectedListingCategory] = useState('All');
 
     // Restaurant Form State
     const [isEditingRestaurant, setIsEditingRestaurant] = useState(false);
@@ -609,7 +612,10 @@ export default function Admin() {
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Price (₹)</label><input type="number" required value={product.price} onChange={e => setProduct({ ...product, price: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20" /></div>
                                     <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Category</label>{activeTab === 'combos' ? <div className="bg-gray-100 p-4 rounded-2xl text-sm font-bold text-gray-400">Combos</div> : <select value={product.category} onChange={e => setProduct({ ...product, category: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-bold focus:ring-2 focus:ring-primary/20">
                                         <optgroup label="Food">
+                                            <option value="Biryanis">Biryanis</option>
+                                            <option value="Pulavs">Pulavs</option>
                                             <option value="Tiffins">Tiffins</option>
+                                            <option value="Ice Creams">Ice Creams</option>
                                             <option value="Desserts">Desserts</option>
                                             <option value="Milkshakes">Milkshakes</option>
                                             <option value="Beverages">Beverages</option>
@@ -672,15 +678,68 @@ export default function Admin() {
                                     </div>
                                 </div>
                                 <div><label className="text-xs font-black uppercase text-gray-400 mb-1 block">Description</label><textarea rows={3} value={product.description} onChange={e => setProduct({ ...product, description: e.target.value })} className="w-full bg-gray-50 border-0 rounded-2xl p-4 text-sm font-medium" placeholder="Tasty ingredients..." /></div>
-                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Tiffins', description: '', emoji: '🥑', unit: '', options: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
+                                <div className="flex gap-3"><button type="submit" disabled={uploading} className="flex-1 bg-gray-900 text-white rounded-2xl p-4 text-sm font-black hover:bg-primary transition-all disabled:opacity-50 shadow-lg shadow-gray-200">{uploading ? 'Processing...' : isEditing ? 'Update Item' : 'Add Item'}</button>{isEditing && <button type="button" onClick={() => { setIsEditing(false); setProduct({ name: '', price: '', category: activeTab === 'combos' ? 'Combos' : 'Biryanis', description: '', emoji: '🍲', unit: '', options: '' }); }} className="bg-gray-100 text-gray-500 rounded-2xl p-4 text-sm font-black">Cancel</button>}</div>
                             </form>
                         </div>
                     </div>
                     <div className="lg:col-span-2 space-y-4">
                         <div className="bg-white shadow-xl shadow-gray-100/50 rounded-3xl overflow-hidden border border-gray-100">
-                            <div className="p-6 border-b border-gray-50 flex justify-between items-center"><h2 className="text-xl font-black">{activeTab === 'combos' ? 'Combos Management' : 'Products Management'}</h2><span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-black uppercase">{products.filter(p => activeTab === 'combos' ? p.category === 'Combos' : p.category !== 'Combos').length} Total</span></div>
+                            <div className="p-6 border-b border-gray-50 space-y-4">
+                                <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <h2 className="text-xl font-black">{activeTab === 'combos' ? 'Combos Management' : 'Products Management'}</h2>
+                                    <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-black uppercase">
+                                        {products.filter(p => {
+                                            if (activeTab === 'combos') return p.category === 'Combos';
+                                            const matchesSearch = p.name.toLowerCase().includes(productSearchQuery.toLowerCase());
+                                            const matchesCategory = selectedListingCategory === 'All' || p.category === selectedListingCategory;
+                                            return p.category !== 'Combos' && matchesSearch && matchesCategory;
+                                        }).length} Total
+                                    </span>
+                                </div>
+
+                                {activeTab !== 'combos' && (
+                                    <div className="flex flex-col md:flex-row gap-3">
+                                        <div className="relative flex-1">
+                                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
+                                            <input
+                                                type="text"
+                                                placeholder="Search products..."
+                                                value={productSearchQuery}
+                                                onChange={(e) => setProductSearchQuery(e.target.value)}
+                                                className="w-full bg-gray-50 border-0 rounded-2xl pl-11 pr-4 py-3 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                                            />
+                                        </div>
+                                        <select
+                                            value={selectedListingCategory}
+                                            onChange={(e) => setSelectedListingCategory(e.target.value)}
+                                            className="bg-gray-50 border-0 rounded-2xl px-4 py-3 text-sm font-bold focus:ring-2 focus:ring-primary/20"
+                                        >
+                                            <option value="All">All Categories</option>
+                                            <option value="Biryanis">Biryanis</option>
+                                            <option value="Pulavs">Pulavs</option>
+                                            <option value="Tiffins">Tiffins</option>
+                                            <option value="Ice Creams">Ice Creams</option>
+                                            <option value="Desserts">Desserts</option>
+                                            <option value="Milkshakes">Milkshakes</option>
+                                            <option value="Beverages">Beverages</option>
+                                            <option value="Fruits">Fruits</option>
+                                            <option value="Green Leafy Vegetables">Leafy Veg</option>
+                                            <option value="Vegetables">Vegetables</option>
+                                            <option value="Rice & Dals">Rice & Dals</option>
+                                            <option value="Oils & Spices">Oils & Spices</option>
+                                            <option value="Snacks & Drinks">Snacks</option>
+                                            <option value="Essentials">Essentials</option>
+                                        </select>
+                                    </div>
+                                )}
+                            </div>
                             <ul className="divide-y divide-gray-50">
-                                {products.filter(p => activeTab === 'combos' ? p.category === 'Combos' : p.category !== 'Combos').map((prod) => (
+                                {products.filter(p => {
+                                    if (activeTab === 'combos') return p.category === 'Combos';
+                                    const matchesSearch = p.name.toLowerCase().includes(productSearchQuery.toLowerCase());
+                                    const matchesCategory = selectedListingCategory === 'All' || p.category === selectedListingCategory;
+                                    return p.category !== 'Combos' && matchesSearch && matchesCategory;
+                                }).map((prod) => (
                                     <li key={prod.id} className="p-6 hover:bg-gray-50/50 transition-all flex justify-between items-center group">
                                         <div className="flex items-center">
                                             <div className="w-14 h-14 bg-gray-100 rounded-2xl flex items-center justify-center text-3xl mr-4 group-hover:scale-110 transition-transform">
