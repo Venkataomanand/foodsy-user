@@ -344,36 +344,7 @@ export default function Checkout() {
                             </div>
                         </div>
 
-                        <div className="mb-8 border-t border-gray-200 pt-8">
-                            <h3 className="text-xl font-bold text-gray-900 mb-4 flex items-center">
-                                <span className="mr-2">📺</span> While you wait...
-                            </h3>
-                            <p className="text-gray-600 mb-4">Enjoy these satisfying food shorts while we prepare your order!</p>
 
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-                                {[
-                                    { id: '1', yId: 'GZ6r_qNDXuY', title: 'Veg Daal Prep' },
-                                    { id: '2', yId: 'Hm040goA_pW', title: 'Chicken Prep' },
-                                    { id: '3', yId: 'Eplga_RY6Ne', title: 'Quick Breakfast' }
-                                ].map((vid) => (
-                                    <div key={vid.id} className="bg-black rounded-lg overflow-hidden relative pt-[177.77%] shadow-md group">
-                                        <iframe
-                                            className="absolute top-0 left-0 w-full h-full"
-                                            src={`https://www.youtube.com/embed/${vid.yId}?rel=0&modestbranding=1&loop=1&playlist=${vid.yId}&controls=0`}
-                                            title={vid.title}
-                                            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                                            allowFullScreen
-                                        />
-                                    </div>
-                                ))}
-                            </div>
-
-                            <div className="text-center">
-                                <Link to="/short-videos" className="text-primary font-medium hover:underline flex items-center justify-center">
-                                    Watch more food videos <span className="ml-1">→</span>
-                                </Link>
-                            </div>
-                        </div>
 
                         <div className="flex flex-col sm:flex-row gap-4">
                             <Link
