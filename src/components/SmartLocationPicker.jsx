@@ -148,18 +148,19 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
         }
 
         setIsLocating(true);
-        // STEP 1: Strict High Accuracy GPS (≤15m target)
+        // STEP 1: Strict High Accuracy GPS Engine (≤15m target)
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const acc = pos.coords.accuracy;
                 setAccuracy(acc);
 
-                // STEP 1 & 2 Validation
-                if (acc > 20) {
-                    setError("LOW_ACCURACY: Please enable High Accuracy GPS mode and ensure you are in an open area (Target: ≤15m, Current: " + acc.toFixed(1) + "m)");
+                // Validation Rule 1: Reject WiFi-only approximate if > 25m
+                if (acc > 25) {
+                    setError("LOW_GPS_ACCURACY");
+                    setIsLocating(false);
+                    return;
                 } else if (acc > 15) {
-                    // Warning but allowed if between 15-20, per prompt rules
-                    setError("MARGINAL_ACCURACY: Improving signal...");
+                    setError("MARGINAL_GPS_ACCURACY: Move towards a window for precision.");
                 } else {
                     setError('');
                 }
@@ -168,14 +169,13 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
                 setIsLocating(false);
             },
             (err) => {
-                // STEP 2 Error Mapping
                 setError("LOCATION_PERMISSION_REQUIRED");
                 setIsLocating(false);
             },
             {
                 enableHighAccuracy: true,
-                timeout: 15000,
-                maximumAge: 0 // Reject cached locations
+                timeout: 20000,
+                maximumAge: 0 // Rule: Reject cached old coordinates
             }
         );
     };

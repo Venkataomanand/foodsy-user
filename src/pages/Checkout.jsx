@@ -67,31 +67,36 @@ export default function Checkout() {
         lng: 82.2580
     };
 
-    const calculateRoadDistance = async (lat1, lon1, lat2, lon2) => {
+    const calculateRoadDistance = async (lat1, lon1, lat2, lon2, acc) => {
         if (!lat1 || !lon1 || !lat2 || !lon2) return { distance: 0, duration: 0 };
 
         try {
-            // STEP 3: Call ROAD based Routing API (OSRM)
-            const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`);
+            // STEP 3 & 4: Mandatory Backend call to Google Directions API
+            const response = await fetch('/api/distance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    restaurant_lat: lat1,
+                    restaurant_lng: lon1,
+                    user_lat: lat2,
+                    user_lng: lon2,
+                    gps_accuracy: acc || 15
+                })
+            });
             const data = await response.json();
 
-            if (data.code !== 'Ok' || !data.routes?.[0]) {
-                throw new Error("DISTANCE_CALCULATION_FAILED");
+            if (data.status !== 'SUCCESS') {
+                throw new Error(data.message || "DISTANCE_API_FAILED");
             }
 
-            const route = data.routes[0];
-            const distanceKM = (route.distance / 1000).toFixed(2); // Convert meters to KM
-            const durationMin = Math.ceil(route.duration / 60); // Convert seconds to minutes
-
             return {
-                distance: parseFloat(distanceKM),
-                duration: durationMin,
+                distance: parseFloat(data.road_distance_km),
+                duration: data.estimated_travel_time_minutes,
                 status: "SUCCESS"
             };
         } catch (error) {
-            console.error("OSRM Error:", error);
-            // Fallback for safety if API fails temporarily
-            return { distance: 5, duration: 15, status: "DISTANCE_CALCULATION_FAILED" };
+            console.error("Distance Engine Error:", error);
+            return { distance: 5, duration: 15, status: "DISTANCE_API_FAILED" };
         }
     };
 
@@ -105,37 +110,39 @@ export default function Checkout() {
     useEffect(() => {
         const calculateAysncDistances = async () => {
             if (userData) {
-                const userLat = Number(userData.latitude) || 16.974;
-                const userLng = Number(userData.longitude) || 82.242;
+                const userLat = Number(userData.latitude);
+                const userLng = Number(userData.longitude);
+                const userAcc = userData.accuracy || 15;
 
                 const hasVeggie = cartItems.some(item =>
                     ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category)
                 );
 
-                // STEP 3: Multi-restaurant Road Distance Logic
+                // Multi-restaurant Road Impact Engine
                 const distancePromises = cartItems.map(async (item) => {
                     const res = restaurants.find(r => r.id === item.restaurantId);
                     const rLat = res?.latitude ? Number(res.latitude) : 16.974;
                     const rLng = res?.longitude ? Number(res.longitude) : 82.242;
-                    return await calculateRoadDistance(rLat, rLng, userLat, userLng);
+                    return await calculateRoadDistance(rLat, rLng, userLat, userLng, userAcc);
                 });
 
                 if (hasVeggie) {
-                    distancePromises.push(calculateRoadDistance(VEG_HUB.lat, VEG_HUB.lng, userLat, userLng));
+                    distancePromises.push(calculateRoadDistance(VEG_HUB.lat, VEG_HUB.lng, userLat, userLng, userAcc));
                 }
 
                 const results = await Promise.all(distancePromises);
                 const distances = results.map(r => r.distance);
                 const maxDist = distances.length > 0 ? Math.max(...distances) : 0;
 
-                // STEP 4: Engine Status Logging (Structured JSON)
+                // Structured JSON Status for Engine (Rule 5)
                 const engineOutput = {
                     "user_latitude": userLat,
                     "user_longitude": userLng,
-                    "gps_accuracy_meters": userData.accuracy || "VERIFIED_SATELLITE",
+                    "gps_accuracy_meters": userAcc,
                     "road_distance_km": maxDist,
                     "estimated_travel_time_minutes": results[0]?.duration || 15,
-                    "status": results.every(r => r.status === "SUCCESS") ? "SUCCESS" : "PARTIAL_ERROR"
+                    "calculation_method": "GOOGLE_DIRECTIONS_API",
+                    "status": results.every(r => r.status === "SUCCESS") ? "SUCCESS" : "ERROR"
                 };
                 console.log("Location & Distance Engine Output:", JSON.stringify(engineOutput, null, 2));
 
