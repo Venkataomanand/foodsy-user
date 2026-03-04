@@ -186,6 +186,7 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
         // STEP 8: Store Final Confirmed Status
         const finalOutput = {
             ...addressData,
+            accuracy: accuracy || 0,
             floor_number: floor,
             gate_details: gate,
             delivery_instructions: instructions,
