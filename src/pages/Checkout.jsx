@@ -120,42 +120,41 @@ export default function Checkout() {
                     ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category)
                 );
 
-                // Unified Single-Source Distance Engine (Step 3 & 4 Reversion)
-                // If anything from Veg/Fruit, use Veg Hub. Else use the first restaurant found.
-                let sourceLat = 16.974;
-                let sourceLng = 82.242;
+                // Restored Multi-restaurant Road Impact Engine (The "Excellent" Logic)
+                const distancePromises = cartItems.map(async (item) => {
+                    const res = restaurants.find(r => r.id === item.restaurantId);
+                    const rLat = res?.latitude ? Number(res.latitude) : 16.974;
+                    const rLng = res?.longitude ? Number(res.longitude) : 82.242;
+                    return await calculateRoadDistance(rLat, rLng, userLat, userLng, userAcc);
+                });
 
                 if (hasVeggie) {
-                    sourceLat = VEG_HUB.lat;
-                    sourceLng = VEG_HUB.lng;
-                } else if (cartItems.length > 0) {
-                    const firstItem = cartItems[0];
-                    const res = restaurants.find(r => r.id === firstItem.restaurantId);
-                    if (res) {
-                        sourceLat = Number(res.latitude);
-                        sourceLng = Number(res.longitude);
-                    }
+                    distancePromises.push(calculateRoadDistance(VEG_HUB.lat, VEG_HUB.lng, userLat, userLng, userAcc));
                 }
 
-                const result = await calculateRoadDistance(sourceLat, sourceLng, userLat, userLng, userAcc);
+                const results = await Promise.all(distancePromises);
+                const charges = results.map(r => r.charge);
+                const distances = results.map(r => r.distance);
+                const maxCharge = charges.length > 0 ? Math.max(...charges) : 0;
+                const maxDist = distances.length > 0 ? Math.max(...distances) : 0;
 
                 // Structured JSON Status for Engine (Step 5)
                 const engineOutput = {
                     "user_latitude": userLat,
                     "user_longitude": userLng,
                     "gps_accuracy_meters": userAcc,
-                    "restaurant_latitude": sourceLat,
-                    "restaurant_longitude": sourceLng,
-                    "road_distance_km": result.distance,
-                    "estimated_travel_time_minutes": result.duration || 15,
-                    "delivery_charge": result.charge,
-                    "status": result.status
+                    "restaurant_latitude": 16.974, // Base Reference
+                    "restaurant_longitude": 82.242,
+                    "road_distance_km": maxDist,
+                    "estimated_travel_time_minutes": results[0]?.duration || 15,
+                    "delivery_charge": maxCharge,
+                    "status": results.every(r => r.status === "SUCCESS") ? "SUCCESS" : "ERROR"
                 };
                 console.log("Location & Distance Engine Output:", JSON.stringify(engineOutput, null, 2));
 
-                setDeliveryDistance(result.distance);
-                setDeliveryCharge(result.charge);
-                setDeliveryDuration(result.duration || 15);
+                setDeliveryDistance(maxDist);
+                setDeliveryCharge(maxCharge);
+                setDeliveryDuration(results[0]?.duration || 15);
             }
         };
 
