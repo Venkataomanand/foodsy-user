@@ -74,7 +74,7 @@ export default function Checkout() {
 
         try {
             // STEP 3 & 4: Mandatory Backend call to Google Directions API
-            const response = await fetch('/api/distance', {
+            const response = await fetch('/api/calculateDistance', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -87,15 +87,15 @@ export default function Checkout() {
             });
             const data = await response.json();
 
-            if (data.status !== 'SUCCESS') {
-                throw new Error(data.message || "DISTANCE_API_FAILED");
+            if (data.status !== 'SERVICEABLE') {
+                throw new Error(data.message || "OUT_OF_RANGE_OR_FAILED");
             }
 
             return {
                 distance: parseFloat(data.road_distance_km),
-                duration: data.estimated_travel_time_minutes,
+                duration: data.estimated_time_min,
                 charge: data.delivery_charge,
-                status: "SUCCESS"
+                status: data.status
             };
         } catch (error) {
             console.error("Distance Engine Error:", error);
@@ -136,7 +136,7 @@ export default function Checkout() {
 
                 const results = await Promise.all(distancePromises);
 
-                const validResults = results.filter(r => r.status === 'SUCCESS');
+                const validResults = results.filter(r => r.status === 'SERVICEABLE');
                 if (validResults.length !== results.length || validResults.length === 0) {
                     setDistanceError(true);
                 } else {
@@ -156,9 +156,9 @@ export default function Checkout() {
                     "restaurant_latitude": 16.974, // Base Reference
                     "restaurant_longitude": 82.242,
                     "road_distance_km": maxDist,
-                    "estimated_travel_time_minutes": results[0]?.duration || 15,
+                    "estimated_time_min": results[0]?.duration || 15,
                     "delivery_charge": maxCharge,
-                    "status": results.every(r => r.status === "SUCCESS") ? "SUCCESS" : "ERROR"
+                    "status": results.every(r => r.status === "SERVICEABLE") ? "SERVICEABLE" : "ERROR"
                 };
                 console.log("Location & Distance Engine Output:", JSON.stringify(engineOutput, null, 2));
 

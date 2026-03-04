@@ -2,9 +2,10 @@ import { useState, useCallback, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, useMapEvents, useMap, Circle } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+
 import { MapPin, Target, Landmark, Navigation2, CheckCircle, AlertTriangle, Building, DoorOpen, ListChecks } from 'lucide-react';
 
-// Fix for default marker icons in Leaflet + React
+// Fix default marker icons
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
     iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
@@ -68,24 +69,21 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
     const [accuracy, setAccuracy] = useState(null);
     const [error, setError] = useState('');
 
-    // Additional confirmation fields
     const [floor, setFloor] = useState('');
     const [gate, setGate] = useState('');
     const [instructions, setInstructions] = useState('');
+    const [distanceEstimate, setDistanceEstimate] = useState(null);
 
     const geocode = async (lat, lng) => {
         setLoading(true);
         try {
-            // STEP 2: Structured Reverse Geocoding
             const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
             const data = await response.json();
             const addr = data.address;
 
-            // STEP 3: Landmark Intelligence & Suggestions
             const poiResponse = await fetch(`https://nominatim.openstreetmap.org/search?format=json&q=building&lat=${lat}&lon=${lng}&limit=5`);
             const pois = await poiResponse.json();
 
-            // Filter and sort suggestions
             const buildingSuggestions = pois.map(p => ({
                 name: p.display_name.split(',')[0],
                 full: p.display_name,
@@ -96,7 +94,6 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
             const building = addr.building || addr.house_name || addr.house_number ||
                 addr.amenity || addr.office || addr.apartment || "";
 
-            // Detect Commercial landmarks
             const commercialLandmarks = [
                 addr.mall, addr.hospital, addr.school, addr.university, addr.temple,
                 addr.bus_stop, addr.railway_station, addr.historic
@@ -104,7 +101,6 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
 
             const landmark = commercialLandmarks[0] || (addr.road ? `Near ${addr.road}` : "Kakinada Main Area");
 
-            // STEP 5: Delivery Zone Validation
             const isInZone = lat >= KAKINADA_ZONE.minLat && lat <= KAKINADA_ZONE.maxLat &&
                 lng >= KAKINADA_ZONE.minLng && lng <= KAKINADA_ZONE.maxLng;
 
@@ -148,19 +144,17 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
         }
 
         setIsLocating(true);
-        // STEP 1: Strict High Accuracy GPS Engine (≤15m target)
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const acc = pos.coords.accuracy;
                 setAccuracy(acc);
 
-                // Validation Rule 1: Reject WiFi-only approximate if > 25m
                 if (acc > 25) {
                     setError("LOW_GPS_ACCURACY");
                     setIsLocating(false);
                     return;
                 } else if (acc > 15) {
-                    setError("MARGINAL_GPS_ACCURACY: Move towards a window for precision.");
+                    setError("MARGINAL_GPS_ACCURACY: Move near window for precision.");
                 } else {
                     setError('');
                 }
@@ -175,13 +169,42 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
             {
                 enableHighAccuracy: true,
                 timeout: 20000,
-                maximumAge: 0 // Rule: Reject cached old coordinates
+                maximumAge: 0
             }
         );
     };
 
-    const handleConfirm = () => {
+    const handleConfirm = async () => {
         if (!addressData) return;
+        setLoading(true);
+
+        // Call backend for delivery estimate (Swiggy Style UI estimate)
+        let calcData = null;
+        try {
+            const res = await fetch('/api/calculateDistance', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    restaurant_lat: 16.974, // Base Hub estimate
+                    restaurant_lng: 82.242,
+                    user_lat: addressData.latitude,
+                    user_lng: addressData.longitude,
+                    gps_accuracy: accuracy || 15
+                })
+            });
+            calcData = await res.json();
+
+            if (calcData.status !== 'SERVICEABLE') {
+                setError("OUT_OF_RANGE: " + (calcData.message || "Distance too far from service hub."));
+            } else {
+                setDistanceEstimate(calcData);
+            }
+        } catch (err) {
+            console.error("Distance estimate check failed", err);
+            setError("Could not calculate distance. Please try again.");
+            setLoading(false);
+            return;
+        }
 
         // STEP 8: Store Final Confirmed Status
         const finalOutput = {
@@ -190,9 +213,17 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
             floor_number: floor,
             gate_details: gate,
             delivery_instructions: instructions,
-            timestamp: new Date().toISOString()
+            timestamp: new Date().toISOString(),
+            // Embed estimated distances
+            road_distance_km: calcData?.road_distance_km || 0,
+            estimated_time_min: calcData?.estimated_time_min || 0,
+            delivery_charge: calcData?.delivery_charge || 0,
+            delivery_status: calcData?.status || "ERROR"
         };
+
+        // Minor delay to let user see the check success if they want, but usually proceeds fast
         onLocationConfirmed(finalOutput);
+        setLoading(false);
     };
 
     return (
@@ -233,7 +264,6 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
             {addressData && !loading && (
                 <div className="space-y-4 animate-fade-in">
                     <div className="bg-white rounded-3xl p-6 border-2 border-gray-50 shadow-xl space-y-6">
-                        {/* Selected Result */}
                         <div className="flex items-start gap-4">
                             <div className="bg-gray-900 p-3 rounded-2xl shadow-lg">
                                 <Building className="h-6 w-6 text-white" />
@@ -312,10 +342,14 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
 
                         <button
                             type="button"
+                            disabled={loading || error.includes("OUT_OF_RANGE")}
                             onClick={handleConfirm}
-                            className="w-full bg-gray-900 hover:bg-primary text-white rounded-3xl py-5 text-sm font-black uppercase tracking-widest shadow-2xl shadow-gray-200 transition-all active:scale-95"
+                            className={`w-full py-5 rounded-3xl text-sm font-black uppercase tracking-widest shadow-2xl transition-all ${loading ? 'bg-gray-400 cursor-not-allowed text-white' :
+                                error.includes("OUT_OF_RANGE") ? 'bg-red-500 text-white cursor-not-allowed' :
+                                    'bg-gray-900 hover:bg-primary text-white active:scale-95 shadow-gray-200'
+                                }`}
                         >
-                            Confirm Precise Intelligence Data
+                            {loading ? 'Checking Distance...' : 'Confirm Location & Estimates'}
                         </button>
                     </div>
                 </div>

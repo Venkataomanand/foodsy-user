@@ -40,8 +40,11 @@ export default async function handler(req, res) {
         const distanceKM = parseFloat((distanceMeters / 1000).toFixed(2));
         const durationMinutes = Math.ceil(durationSeconds / 60);
 
-        // STEP 4: Calculate Delivery Charges (Rule: 1st KM = 20, Subsequent = 10/KM)
-        const deliveryCharge = distanceKM <= 1 ? 20 : 20 + Math.ceil(distanceKM - 1) * 10;
+        // STEP 4: Calculate Delivery Charges (Rule: 10 per KM)
+        const deliveryCharge = parseFloat((distanceKM * 10).toFixed(2));
+
+        // Status Rules
+        const status = distanceKM <= 10 ? "SERVICEABLE" : "OUT_OF_RANGE";
 
         // STEP 5: Standard JSON Return Format
         return res.status(200).json({
@@ -51,9 +54,9 @@ export default async function handler(req, res) {
             "restaurant_latitude": restaurant_lat,
             "restaurant_longitude": restaurant_lng,
             "road_distance_km": distanceKM,
-            "estimated_travel_time_minutes": durationMinutes,
+            "estimated_time_min": durationMinutes,
             "delivery_charge": deliveryCharge,
-            "status": "SUCCESS"
+            "status": status
         });
 
     } catch (error) {
