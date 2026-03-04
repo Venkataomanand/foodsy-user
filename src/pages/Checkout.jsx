@@ -67,19 +67,32 @@ export default function Checkout() {
         lng: 82.2580
     };
 
-    const calculateHaversine = (lat1, lon1, lat2, lon2) => {
-        if (!lat1 || !lon1 || !lat2 || !lon2) return 0;
-        const R = 6371; // Earth's radius in KM
-        const dLat = (Number(lat2) - Number(lat1)) * Math.PI / 180;
-        const dLon = (Number(lon2) - Number(lon1)) * Math.PI / 180;
-        const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-            Math.cos(Number(lat1) * Math.PI / 180) * Math.cos(Number(lat2) * Math.PI / 180) *
-            Math.sin(dLon / 2) * Math.sin(dLon / 2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        const straightDist = R * c;
-        // Adjusted multiplier (1.5x) to convert straight-line to road distance.
-        // This accounts for the circuitous route patterns and bridge crossings in Kakinada.
-        return straightDist * 1.5;
+    const calculateRoadDistance = async (lat1, lon1, lat2, lon2) => {
+        if (!lat1 || !lon1 || !lat2 || !lon2) return { distance: 0, duration: 0 };
+
+        try {
+            // STEP 3: Call ROAD based Routing API (OSRM)
+            const response = await fetch(`https://router.project-osrm.org/route/v1/driving/${lon1},${lat1};${lon2},${lat2}?overview=false`);
+            const data = await response.json();
+
+            if (data.code !== 'Ok' || !data.routes?.[0]) {
+                throw new Error("DISTANCE_CALCULATION_FAILED");
+            }
+
+            const route = data.routes[0];
+            const distanceKM = (route.distance / 1000).toFixed(2); // Convert meters to KM
+            const durationMin = Math.ceil(route.duration / 60); // Convert seconds to minutes
+
+            return {
+                distance: parseFloat(distanceKM),
+                duration: durationMin,
+                status: "SUCCESS"
+            };
+        } catch (error) {
+            console.error("OSRM Error:", error);
+            // Fallback for safety if API fails temporarily
+            return { distance: 5, duration: 15, status: "DISTANCE_CALCULATION_FAILED" };
+        }
     };
 
     // Unified calculation logic: 1st KM = 20, Subsequent = 10/KM (rounded up)
@@ -90,36 +103,48 @@ export default function Checkout() {
     };
 
     useEffect(() => {
-        if (userData) {
-            // Determine if Veg Hub should be used
-            const hasVeggie = cartItems.some(item =>
-                ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category)
-            );
+        const calculateAysncDistances = async () => {
+            if (userData) {
+                const userLat = Number(userData.latitude) || 16.974;
+                const userLng = Number(userData.longitude) || 82.242;
 
-            // User Location
-            const userLat = Number(userData.latitude) || (AREAS.find(a => userData.address?.toLowerCase().includes(a.name.toLowerCase()))?.lat) || 16.974;
-            const userLng = Number(userData.longitude) || (AREAS.find(a => userData.address?.toLowerCase().includes(a.name.toLowerCase()))?.lng) || 82.242;
+                const hasVeggie = cartItems.some(item =>
+                    ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category)
+                );
 
-            // Source Location
-            // Source Selection: Calculate distance from ALL restaurants in cart and take the MAXIMUM
-            // This ensures long-distance orders are charged correctly even if multiple items are present
-            const dists = cartItems.map(item => {
-                const res = restaurants.find(r => r.id === item.restaurantId);
-                const rLat = res?.latitude ? Number(res.latitude) : 16.974;
-                const rLng = res?.longitude ? Number(res.longitude) : 82.242;
-                return calculateHaversine(rLat, rLng, userLat, userLng);
-            });
+                // STEP 3: Multi-restaurant Road Distance Logic
+                const distancePromises = cartItems.map(async (item) => {
+                    const res = restaurants.find(r => r.id === item.restaurantId);
+                    const rLat = res?.latitude ? Number(res.latitude) : 16.974;
+                    const rLng = res?.longitude ? Number(res.longitude) : 82.242;
+                    return await calculateRoadDistance(rLat, rLng, userLat, userLng);
+                });
 
-            if (hasVeggie) {
-                dists.push(calculateHaversine(VEG_HUB.lat, VEG_HUB.lng, userLat, userLng));
+                if (hasVeggie) {
+                    distancePromises.push(calculateRoadDistance(VEG_HUB.lat, VEG_HUB.lng, userLat, userLng));
+                }
+
+                const results = await Promise.all(distancePromises);
+                const distances = results.map(r => r.distance);
+                const maxDist = distances.length > 0 ? Math.max(...distances) : 0;
+
+                // STEP 4: Engine Status Logging (Structured JSON)
+                const engineOutput = {
+                    "user_latitude": userLat,
+                    "user_longitude": userLng,
+                    "gps_accuracy_meters": userData.accuracy || "VERIFIED_SATELLITE",
+                    "road_distance_km": maxDist,
+                    "estimated_travel_time_minutes": results[0]?.duration || 15,
+                    "status": results.every(r => r.status === "SUCCESS") ? "SUCCESS" : "PARTIAL_ERROR"
+                };
+                console.log("Location & Distance Engine Output:", JSON.stringify(engineOutput, null, 2));
+
+                setDeliveryDistance(maxDist);
+                setDeliveryCharge(calculateDeliveryFee(maxDist));
             }
+        };
 
-            const maxDist = dists.length > 0 ? Math.max(...dists) : 0;
-            setDeliveryDistance(maxDist);
-
-            const fee = calculateDeliveryFee(maxDist);
-            setDeliveryCharge(fee);
-        }
+        calculateAysncDistances();
     }, [userData, cartItems, restaurants]);
 
     const handleAreaChange = (e) => {

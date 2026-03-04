@@ -143,29 +143,40 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
 
     const handleCurrentLocation = () => {
         if (!navigator.geolocation) {
-            setError("GPS not supported");
+            setError("GPS_NOT_SUPPORTED");
             return;
         }
 
         setIsLocating(true);
-        // STEP 1: High Accuracy GPS
+        // STEP 1: Strict High Accuracy GPS (≤15m target)
         navigator.geolocation.getCurrentPosition(
             (pos) => {
                 const acc = pos.coords.accuracy;
                 setAccuracy(acc);
+
+                // STEP 1 & 2 Validation
                 if (acc > 20) {
-                    setError("Accuracy weak (>20m). Please enable High Accuracy GPS mode and stand near a window.");
+                    setError("LOW_ACCURACY: Please enable High Accuracy GPS mode and ensure you are in an open area (Target: ≤15m, Current: " + acc.toFixed(1) + "m)");
+                } else if (acc > 15) {
+                    // Warning but allowed if between 15-20, per prompt rules
+                    setError("MARGINAL_ACCURACY: Improving signal...");
                 } else {
                     setError('');
                 }
+
                 setPosition({ lat: pos.coords.latitude, lng: pos.coords.longitude });
                 setIsLocating(false);
             },
             (err) => {
-                setError("Enable Location permissions for precise delivery.");
+                // STEP 2 Error Mapping
+                setError("LOCATION_PERMISSION_REQUIRED");
                 setIsLocating(false);
             },
-            { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+            {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0 // Reject cached locations
+            }
         );
     };
 
