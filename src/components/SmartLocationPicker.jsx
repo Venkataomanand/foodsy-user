@@ -149,11 +149,11 @@ export default function SmartLocationPicker({ onLocationConfirmed, initialCoords
                 const acc = pos.coords.accuracy;
                 setAccuracy(acc);
 
-                if (acc > 25) {
-                    setError("LOW_GPS_ACCURACY");
+                if (acc > 30) {
+                    setError("LOW_GPS_ACCURACY: Move to an open area");
                     setIsLocating(false);
                     return;
-                } else if (acc > 15) {
+                } else if (acc > 20) {
                     setError("MARGINAL_GPS_ACCURACY: Move near window for precision.");
                 } else {
                     setError('');
