@@ -37,19 +37,22 @@ export default async function handler(req, res) {
         const durationSeconds = leg.duration.value;
 
         // Convert Phase (Rule 3)
-        const distanceKM = (distanceMeters / 1000).toFixed(2);
+        const distanceKM = parseFloat((distanceMeters / 1000).toFixed(2));
         const durationMinutes = Math.ceil(durationSeconds / 60);
+
+        // STEP 4: Calculate Delivery Charges (Rule: 1st KM = 20, Subsequent = 10/KM)
+        const deliveryCharge = distanceKM <= 1 ? 20 : 20 + Math.ceil(distanceKM - 1) * 10;
 
         // STEP 5: Standard JSON Return Format
         return res.status(200).json({
-            "restaurant_latitude": restaurant_lat,
-            "restaurant_longitude": restaurant_lng,
             "user_latitude": user_lat,
             "user_longitude": user_lng,
             "gps_accuracy_meters": req.body.gps_accuracy || "VERIFIED",
+            "restaurant_latitude": restaurant_lat,
+            "restaurant_longitude": restaurant_lng,
             "road_distance_km": distanceKM,
             "estimated_travel_time_minutes": durationMinutes,
-            "calculation_method": "GOOGLE_DIRECTIONS_API",
+            "delivery_charge": deliveryCharge,
             "status": "SUCCESS"
         });
 

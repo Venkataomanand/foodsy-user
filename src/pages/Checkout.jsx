@@ -29,6 +29,7 @@ export default function Checkout() {
     });
     const [deliveryDistance, setDeliveryDistance] = useState(0);
     const [deliveryCharge, setDeliveryCharge] = useState(0);
+    const [deliveryDuration, setDeliveryDuration] = useState(0);
 
     const AREAS = [
         { name: "Sarpavaram", distance: 3, lat: 16.985, lng: 82.250 },
@@ -68,7 +69,7 @@ export default function Checkout() {
     };
 
     const calculateRoadDistance = async (lat1, lon1, lat2, lon2, acc) => {
-        if (!lat1 || !lon1 || !lat2 || !lon2) return { distance: 0, duration: 0 };
+        if (!lat1 || !lon1 || !lat2 || !lon2) return { distance: 0, duration: 0, charge: 0 };
 
         try {
             // STEP 3 & 4: Mandatory Backend call to Google Directions API
@@ -92,11 +93,12 @@ export default function Checkout() {
             return {
                 distance: parseFloat(data.road_distance_km),
                 duration: data.estimated_travel_time_minutes,
+                charge: data.delivery_charge,
                 status: "SUCCESS"
             };
         } catch (error) {
             console.error("Distance Engine Error:", error);
-            return { distance: 5, duration: 15, status: "DISTANCE_API_FAILED" };
+            return { distance: 5, duration: 15, charge: 60, status: "DISTANCE_API_FAILED" };
         }
     };
 
@@ -131,23 +133,28 @@ export default function Checkout() {
                 }
 
                 const results = await Promise.all(distancePromises);
+                const charges = results.map(r => r.charge);
                 const distances = results.map(r => r.distance);
+                const maxCharge = charges.length > 0 ? Math.max(...charges) : 0;
                 const maxDist = distances.length > 0 ? Math.max(...distances) : 0;
 
-                // Structured JSON Status for Engine (Rule 5)
+                // Structured JSON Status for Engine (Step 5)
                 const engineOutput = {
                     "user_latitude": userLat,
                     "user_longitude": userLng,
                     "gps_accuracy_meters": userAcc,
+                    "restaurant_latitude": 16.974, // Base Reference
+                    "restaurant_longitude": 82.242,
                     "road_distance_km": maxDist,
                     "estimated_travel_time_minutes": results[0]?.duration || 15,
-                    "calculation_method": "GOOGLE_DIRECTIONS_API",
+                    "delivery_charge": maxCharge,
                     "status": results.every(r => r.status === "SUCCESS") ? "SUCCESS" : "ERROR"
                 };
                 console.log("Location & Distance Engine Output:", JSON.stringify(engineOutput, null, 2));
 
                 setDeliveryDistance(maxDist);
-                setDeliveryCharge(calculateDeliveryFee(maxDist));
+                setDeliveryCharge(maxCharge);
+                setDeliveryDuration(results[0]?.duration || 15);
             }
         };
 
@@ -228,6 +235,7 @@ export default function Checkout() {
                 subtotal: cartTotal,
                 deliveryFee: deliveryCharge,
                 distance: deliveryDistance,
+                time_minutes: deliveryDuration,
                 totalAmount: finalTotal,
                 cookingRequest: formData.cookingRequest || '',
                 deliveryInstructions: userData?.delivery_instructions || '',
@@ -400,9 +408,16 @@ export default function Checkout() {
                                         <span className="text-gray-900">₹{orderData.subtotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm font-medium mb-3">
-                                        <div>
+                                        <div className="flex-1">
                                             <span className="text-gray-600 block">Logistics & Delivery</span>
-                                            <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest bg-gray-900/50 px-2 py-0.5 rounded">Est. Road Distance: {orderData.distance?.toFixed(2)} KM</span>
+                                            <div className="flex items-center gap-2 mt-1">
+                                                <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest bg-gray-900/50 px-2 py-0.5 rounded flex items-center gap-1">
+                                                    <Truck className="h-3 w-3" /> {orderData.distance?.toFixed(2)} KM
+                                                </span>
+                                                <span className="text-[10px] font-bold text-gray-200 uppercase tracking-widest bg-orange-600/50 px-2 py-0.5 rounded flex items-center gap-1">
+                                                    Est. {orderData.time_minutes || 15} Mins
+                                                </span>
+                                            </div>
                                         </div>
                                         <span className="text-gray-900">₹{orderData.deliveryFee.toFixed(2)}</span>
                                     </div>
