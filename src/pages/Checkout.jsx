@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useProduct } from '../context/ProductContext';
-import { CheckCircle, Truck, Wallet, Banknote, CreditCard, MapPin } from 'lucide-react';
+import { CheckCircle, Truck, Wallet, Banknote, CreditCard, MapPin, Landmark } from 'lucide-react';
 import { db } from '../firebase';
 import { doc, setDoc, serverTimestamp, runTransaction } from 'firebase/firestore';
 

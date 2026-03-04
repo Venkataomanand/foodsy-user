@@ -210,29 +210,29 @@ export default function Signup() {
                     ) : (
                         <form className="space-y-6 animate-fade-in" onSubmit={handleSubmit}>
                             <div>
-                                <label className="block text-sm font-medium text-gray-500">
-                                    Email (Auto-filled)
+                                <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">
+                                    Email (Confirming)
                                 </label>
-                                <div className="mt-1 relative rounded-md shadow-sm opacity-70">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-gray-400" />
+                                <div className="mt-1 relative rounded-2xl shadow-sm opacity-60">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Mail className="h-4 w-4 text-gray-400" />
                                     </div>
                                     <input
                                         type="email"
                                         value={email}
                                         disabled
-                                        className="bg-gray-100 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border"
+                                        className="bg-gray-100 block w-full pl-11 text-sm font-bold rounded-2xl py-3.5"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="password" className="block text-sm font-medium text-gray-700">
-                                    Set Password
+                                <label htmlFor="password" className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">
+                                    Create Password
                                 </label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-orange-400" />
+                                <div className="mt-1 relative rounded-2xl shadow-sm">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Lock className="h-4 w-4 text-orange-400" />
                                     </div>
                                     <input
                                         id="password"
@@ -241,19 +241,19 @@ export default function Signup() {
                                         required
                                         value={password}
                                         onChange={(e) => setPassword(e.target.value)}
-                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
-                                        placeholder="Minimum 6 characters, letters & numbers"
+                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-11 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl py-3.5"
+                                        placeholder="Min. 6 chars (A-z, 0-9)"
                                     />
                                 </div>
                             </div>
 
                             <div>
-                                <label htmlFor="confirm-password" className="block text-sm font-medium text-gray-700">
-                                    Confirm Password
+                                <label htmlFor="confirm-password" className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">
+                                    Repeat Password
                                 </label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Lock className="h-5 w-5 text-orange-400" />
+                                <div className="mt-1 relative rounded-2xl shadow-sm">
+                                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                        <Lock className="h-4 w-4 text-orange-400" />
                                     </div>
                                     <input
                                         id="confirm-password"
@@ -262,28 +262,29 @@ export default function Signup() {
                                         required
                                         value={confirmPassword}
                                         onChange={(e) => setConfirmPassword(e.target.value)}
-                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
-                                        placeholder="Confirm your password"
+                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-11 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl py-3.5"
+                                        placeholder="Confirm security password"
                                     />
                                 </div>
                             </div>
 
-                            <div className="flex gap-3">
+                            <div className="flex gap-4 pt-4">
                                 <button
                                     type="button"
                                     onClick={() => setStep(1)}
-                                    className="flex-1 flex justify-center py-3 px-4 border border-orange-200 text-orange-600 rounded-xl shadow-sm text-sm font-bold bg-orange-50 hover:bg-orange-100 focus:outline-none transition-all active:scale-95"
+                                    className="flex-1 flex justify-center py-4 px-4 rounded-2xl text-gray-600 bg-gray-50 hover:bg-gray-100 font-black transition-all active:scale-95"
                                 >
                                     Back
                                 </button>
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="flex-[2] flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50 transition-all active:scale-95"
+                                    className="flex-[2] flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-xl text-sm font-black text-white bg-gray-900 hover:bg-orange-600 focus:outline-none transition-all active:scale-95"
                                 >
-                                    {loading ? <Loader className="animate-spin h-5 w-5" /> : 'Create Account'}
+                                    {loading ? <Loader className="animate-spin h-5 w-5" /> : 'Set Secure Password'}
                                 </button>
                             </div>
+                            <p className="text-[10px] text-center text-gray-400 mt-4 font-bold uppercase tracking-widest leading-none">Step 2 of 2: Account Security</p>
                         </form>
                     )}
                 </div>

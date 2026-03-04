@@ -4,7 +4,8 @@ import { db } from '../firebase';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
-import { Loader, User, Mail, MapPin, Building2, LogOut, Edit2, Check, X } from 'lucide-react';
+import { Loader, User, Mail, MapPin, Building2, LogOut, Edit2, Check, X, Landmark, Navigation, NotebookText } from 'lucide-react';
+import SmartLocationPicker from '../components/SmartLocationPicker';
 
 export default function Profile() {
     const { currentUser, logout } = useAuth();
@@ -16,8 +17,8 @@ export default function Profile() {
 
     // Edit form states
     const [editUsername, setEditUsername] = useState('');
-    const [editAddress, setEditAddress] = useState('');
-    const [editCity, setEditCity] = useState('Kakinada');
+    const [editLocationData, setEditLocationData] = useState(null); // Stores { lat, lng, full_address, building_name, landmark, delivery_zone_status }
+    const [editInstructions, setEditInstructions] = useState('');
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
     const [shake, setShake] = useState(false);
@@ -33,10 +34,21 @@ export default function Profile() {
                 const docRef = doc(db, 'users', currentUser.uid);
                 const docSnap = await getDoc(docRef);
                 if (docSnap.exists()) {
-                    setUserData(docSnap.data());
-                    setEditUsername(docSnap.data().username || currentUser.displayName || '');
-                    setEditAddress(docSnap.data().address || '');
-                    setEditCity(docSnap.data().city || 'Kakinada');
+                    const data = docSnap.data();
+                    setUserData(data);
+                    setEditUsername(data.username || currentUser.displayName || '');
+                    setEditInstructions(data.delivery_instructions || '');
+                    // Prepare initial location for picker if it exists
+                    if (data.latitude && data.longitude) {
+                        setEditLocationData({
+                            lat: Number(data.latitude),
+                            lng: Number(data.longitude),
+                            full_address: data.full_address || data.address,
+                            building_name: data.building_name,
+                            landmark: data.landmark,
+                            delivery_zone_status: data.delivery_zone_status
+                        });
+                    }
                 } else {
                     setEditUsername(currentUser.displayName || '');
                 }
@@ -65,23 +77,22 @@ export default function Profile() {
         }
     };
 
+    const handleLocationConfirmed = (data) => {
+        setEditLocationData(data);
+        setError('');
+    };
+
     const handleSaveProfile = async (e) => {
         e.preventDefault();
 
         if (editUsername.length < 3 || !/^[a-zA-Z0-9_]+$/.test(editUsername)) {
-            setError('Username must be at least 3 characters and contain only letters, numbers, or underscores.');
+            setError('Username must be at least 3 characters.');
             triggerValidationShake();
             return;
         }
 
-        if (editAddress.trim() === '') {
-            setError('Address cannot be empty.');
-            triggerValidationShake();
-            return;
-        }
-
-        if (editCity.trim().toLowerCase() !== 'kakinada') {
-            setError('Currently serving only Kakinada region.');
+        if (!editLocationData && !userData?.address) { // Check if no new location data and no existing address
+            setError('Please pin your delivery location.');
             triggerValidationShake();
             return;
         }
@@ -93,18 +104,31 @@ export default function Profile() {
             // Update auth profile
             await updateProfile(currentUser, { displayName: editUsername });
 
+            const updatedLocation = editLocationData ? {
+                latitude: editLocationData.lat,
+                longitude: editLocationData.lng,
+                full_address: editLocationData.full_address,
+                building_name: editLocationData.building_name || null,
+                landmark: editLocationData.landmark || null,
+                delivery_zone_status: editLocationData.delivery_zone_status || null,
+                delivery_instructions: editInstructions,
+                updatedAt: new Date().toISOString()
+            } : {
+                // If location picker wasn't used, but instructions were updated
+                delivery_instructions: editInstructions,
+                updatedAt: new Date().toISOString()
+            };
+
             // Update firestore document
             await updateDoc(doc(db, 'users', currentUser.uid), {
                 username: editUsername,
-                address: editAddress,
-                city: editCity
+                ...updatedLocation
             });
 
             setUserData(prev => ({
                 ...prev,
                 username: editUsername,
-                address: editAddress,
-                city: editCity
+                ...updatedLocation
             }));
 
             setIsEditing(false);
@@ -174,120 +198,115 @@ export default function Profile() {
                                         </p>
                                     </div>
 
-                                    <div className="bg-orange-50/50 rounded-2xl p-6 text-left border border-orange-100 shadow-sm">
-                                        <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-4">Delivery Details</h3>
-                                        <div className="space-y-4">
-                                            <div className="flex items-start">
-                                                <MapPin className="h-5 w-5 text-gray-400 mt-0.5 mr-3 flex-shrink-0" />
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900">{userData?.address || 'No address provided'}</p>
-                                                    <p className="text-xs text-gray-500 mt-1">Street Address</p>
-                                                </div>
+                                    <div className="bg-orange-50/50 rounded-2xl p-6 text-left border border-orange-100 shadow-sm space-y-5">
+                                        <h3 className="text-sm font-bold text-orange-600 uppercase tracking-wider mb-2">Delivery Intelligence</h3>
+
+                                        <div className="flex items-start">
+                                            <div className="bg-white p-2 rounded-xl shadow-sm mr-4">
+                                                <Building2 className="h-5 w-5 text-primary" />
                                             </div>
-                                            <div className="flex items-start">
-                                                <Building2 className="h-5 w-5 text-gray-400 mt-0.5 mr-3 flex-shrink-0" />
-                                                <div>
-                                                    <p className="text-sm font-medium text-gray-900">{userData?.city || 'Kakinada'}</p>
-                                                    <p className="text-xs text-gray-500 mt-1">City</p>
-                                                </div>
+                                            <div>
+                                                <p className="text-sm font-black text-gray-900 leading-tight">
+                                                    {userData?.building_name || 'Home/Office'}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{userData?.full_address || userData?.address || 'No address provided'}</p>
                                             </div>
                                         </div>
+
+                                        {userData?.landmark && (
+                                            <div className="flex items-start">
+                                                <div className="bg-white p-2 rounded-xl shadow-sm mr-4">
+                                                    <Landmark className="h-5 w-5 text-orange-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-bold text-gray-800">Near {userData?.landmark}</p>
+                                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-0.5">Verified Landmark</p>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {userData?.delivery_instructions && (
+                                            <div className="flex items-start">
+                                                <div className="bg-white p-2 rounded-xl shadow-sm mr-4">
+                                                    <NotebookText className="h-5 w-5 text-gray-400" />
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-medium text-gray-700 italic">"{userData?.delivery_instructions}"</p>
+                                                    <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-0.5">Instructions</p>
+                                                </div>
+                                            </div>
+                                        )}
                                     </div>
 
                                     <button
                                         onClick={handleLogout}
-                                        className="w-full flex items-center justify-center py-3 px-4 border border-red-200 rounded-xl text-red-600 bg-red-50 hover:bg-red-100 font-bold transition-colors shadow-sm"
+                                        className="w-full flex items-center justify-center py-4 px-4 border border-red-100 rounded-2xl text-red-600 bg-red-50 hover:bg-red-100 font-black transition-all shadow-sm active:scale-95"
                                     >
                                         <LogOut className="h-5 w-5 mr-2" /> Log Out
                                     </button>
                                 </div>
                             ) : (
-                                <form onSubmit={handleSaveProfile} className="space-y-5 animate-fade-in text-left">
+                                <form onSubmit={handleSaveProfile} className="space-y-6 animate-fade-in text-left">
                                     <div>
-                                        <label className="block text-sm font-medium text-gray-700">Username</label>
-                                        <div className="mt-1 relative rounded-md shadow-sm">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <User className="h-5 w-5 text-orange-400" />
+                                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">Username</label>
+                                        <div className="relative rounded-2xl shadow-sm">
+                                            <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                                <User className="h-4 w-4 text-orange-400" />
                                             </div>
                                             <input
                                                 type="text"
                                                 value={editUsername}
                                                 onChange={(e) => setEditUsername(e.target.value)}
-                                                className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5 border shadow-sm transition-colors"
+                                                className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-11 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl py-3.5"
                                             />
                                         </div>
+                                    </div>
+
+                                    <div className="pt-2">
+                                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-1 flex items-center gap-1">
+                                            <Navigation className="h-3 w-3" /> Update Map Location
+                                        </label>
+                                        <SmartLocationPicker
+                                            onLocationConfirmed={handleLocationConfirmed}
+                                            initialCoords={userData?.latitude ? { lat: Number(userData.latitude), lng: Number(userData.longitude) } : null}
+                                        />
                                     </div>
 
                                     <div>
-                                        <label className="block text-sm text-gray-500 font-medium">Email (Not Editable)</label>
-                                        <div className="mt-1 relative rounded-md shadow-sm opacity-60">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <Mail className="h-5 w-5 text-gray-400" />
-                                            </div>
-                                            <input
-                                                type="email"
-                                                disabled
-                                                value={currentUser.email}
-                                                className="bg-gray-100 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5 border"
-                                            />
-                                        </div>
+                                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1 flex items-center gap-1">
+                                            <NotebookText className="h-3 w-3" /> Delivery Instructions
+                                        </label>
+                                        <textarea
+                                            value={editInstructions}
+                                            onChange={(e) => setEditInstructions(e.target.value)}
+                                            className="focus:ring-orange-500 focus:border-orange-500 block w-full px-4 py-3 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl transition-all"
+                                            placeholder="Apt/Flat No, Landmarks, etc."
+                                            rows={2}
+                                        />
                                     </div>
 
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">Address</label>
-                                        <div className="mt-1 relative rounded-md shadow-sm">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <MapPin className="h-5 w-5 text-orange-400" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={editAddress}
-                                                onChange={(e) => setEditAddress(e.target.value)}
-                                                className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5 border shadow-sm transition-colors"
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-sm font-medium text-gray-700">City</label>
-                                        <div className="mt-1 relative rounded-md shadow-sm">
-                                            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                                <Building2 className="h-5 w-5 text-orange-400" />
-                                            </div>
-                                            <input
-                                                type="text"
-                                                value={editCity}
-                                                onChange={(e) => setEditCity(e.target.value)}
-                                                className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-2.5 border shadow-sm transition-colors"
-                                            />
-                                        </div>
-                                        <p className="mt-1 text-xs text-orange-500 font-medium">Currently serving only Kakinada region.</p>
-                                    </div>
-
-                                    <div className="flex gap-3 pt-4">
+                                    <div className="flex gap-4 pt-4">
                                         <button
                                             type="button"
                                             onClick={() => {
                                                 setIsEditing(false);
                                                 setError('');
-                                                // Reset to initial values
                                                 setEditUsername(userData?.username || currentUser?.displayName || '');
-                                                setEditAddress(userData?.address || '');
-                                                setEditCity(userData?.city || 'Kakinada');
+                                                setEditInstructions(userData?.delivery_instructions || '');
                                             }}
-                                            className="flex-1 flex justify-center py-2.5 px-4 rounded-xl text-gray-700 bg-gray-100 hover:bg-gray-200 font-bold transition-colors shadow-sm"
+                                            className="flex-1 flex justify-center py-4 px-4 rounded-2xl text-gray-600 bg-gray-50 hover:bg-gray-100 font-black transition-all shadow-sm active:scale-95"
                                         >
-                                            <X className="h-5 w-5 mr-1 -ml-1" /> Cancel
+                                            <X className="h-5 w-5 mr-1" /> Cancel
                                         </button>
                                         <button
                                             type="submit"
                                             disabled={saving}
-                                            className="flex-[2] flex justify-center py-2.5 px-4 rounded-xl text-white bg-orange-600 hover:bg-orange-700 font-bold transition-all disabled:opacity-50 active:scale-95 shadow-md flex items-center"
+                                            className="flex-[2] flex justify-center py-4 px-4 rounded-2xl text-white bg-gray-900 hover:bg-orange-600 font-black transition-all disabled:opacity-50 active:scale-95 shadow-xl flex items-center gap-2"
                                         >
                                             {saving ? (
                                                 <Loader className="animate-spin h-5 w-5" />
                                             ) : (
-                                                <><Check className="h-5 w-5 mr-1" /> Save Changes</>
+                                                <><Check className="h-5 w-5" /> Save Profile</>
                                             )}
                                         </button>
                                     </div>
