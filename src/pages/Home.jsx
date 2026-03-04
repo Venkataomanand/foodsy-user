@@ -15,6 +15,8 @@ const CATEGORY_GROUPS = [
         title: "Delicious Food",
         subtitle: "Tiffins, Desserts & more",
         items: [
+            { name: 'Biryanis', icon: '🥘', color: 'bg-orange-50', link: '/products?category=biryanis' },
+            { name: 'Pulavs', icon: '🍛', color: 'bg-yellow-50', link: '/products?category=pulavs' },
             { name: 'Tiffins', icon: '🥗', color: 'bg-lime-50', link: '/products?category=tiffins' },
             { name: 'Desserts', icon: '🍰', color: 'bg-pink-50', link: '/products?category=desserts' },
             { name: 'Milkshakes', icon: '🥤', color: 'bg-purple-50', link: '/products?category=milkshakes' },
