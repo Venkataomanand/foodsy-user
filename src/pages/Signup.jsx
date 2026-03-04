@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Mail, Lock, Loader, User, MapPin, Building2, ArrowRight, Target, CheckCircle } from 'lucide-react';
+import { Mail, Lock, Loader, User, Navigation, ArrowRight, CheckCircle, NotebookText } from 'lucide-react';
+import SmartLocationPicker from '../components/SmartLocationPicker';
 
 export default function Signup() {
     const [step, setStep] = useState(1);
@@ -9,10 +10,8 @@ export default function Signup() {
     // Step 1 fields
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
-    const [address, setAddress] = useState('');
-    const [city, setCity] = useState('Kakinada');
-    const [coords, setCoords] = useState(null);
-    const [locating, setLocating] = useState(false);
+    const [locationData, setLocationData] = useState(null);
+    const [deliveryInstructions, setDeliveryInstructions] = useState('');
 
     // Step 2 fields
     const [password, setPassword] = useState('');
@@ -33,49 +32,17 @@ export default function Signup() {
         setTimeout(() => setShake(false), 500);
     };
 
-    const handleGetLocation = () => {
-        if (!navigator.geolocation) {
-            setError("Geolocation is not supported by your browser");
-            return;
-        }
-
-        setLocating(true);
-        navigator.geolocation.getCurrentPosition(
-            async (position) => {
-                const { latitude, longitude } = position.coords;
-                setCoords({ lat: latitude, lng: longitude });
-
-                try {
-                    // Reverse geocoding using Nominatim (Free)
-                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
-                    const data = await response.json();
-                    if (data && data.display_name) {
-                        setAddress(data.display_name);
-                    } else {
-                        setAddress(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-                    }
-                } catch (geoErr) {
-                    console.error("Reverse geocoding failed:", geoErr);
-                    setAddress(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
-                }
-
-                setLocating(false);
-                if (navigator.vibrate) navigator.vibrate(50);
-            },
-            (err) => {
-                console.error(err);
-                setError("Unable to retrieve your location. Please type your address manually.");
-                setLocating(false);
-            },
-            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-        );
+    const handleLocationConfirmed = (data) => {
+        setLocationData(data);
+        setError('');
+        if (navigator.vibrate) navigator.vibrate(50);
     };
 
     const handleNextStep = (e) => {
         e.preventDefault();
 
-        if (username.length < 3 || !/^[a-zA-Z0-9_]+$/.test(username)) {
-            setError('Username must be at least 3 characters and contain only letters, numbers, or underscores.');
+        if (username.length < 3) {
+            setError('Username must be at least 3 characters.');
             triggerValidationShake();
             return;
         }
@@ -87,14 +54,8 @@ export default function Signup() {
             return;
         }
 
-        if (address.trim() === '') {
-            setError('Address is required.');
-            triggerValidationShake();
-            return;
-        }
-
-        if (city.trim().toLowerCase() !== 'kakinada') {
-            setError('The app currently supports only the Kakinada region.');
+        if (!locationData) {
+            setError('Please confirm your precise delivery location on the map.');
             triggerValidationShake();
             return;
         }
@@ -121,7 +82,11 @@ export default function Signup() {
         try {
             setError('');
             setLoading(true);
-            await signup(email, password, username, address, city, coords);
+            const userFullLocation = {
+                ...locationData,
+                delivery_instructions: deliveryInstructions
+            };
+            await signup(email, password, username, userFullLocation);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Success haptics
             navigate('/');
         } catch (err) {
@@ -167,113 +132,79 @@ export default function Signup() {
 
                     {step === 1 ? (
                         <form className="space-y-6" onSubmit={handleNextStep}>
-                            <div>
-                                <label htmlFor="username" className="block text-sm font-medium text-gray-700">
-                                    Username
-                                </label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <User className="h-5 w-5 text-orange-400" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div>
+                                    <label htmlFor="username" className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">
+                                        Username
+                                    </label>
+                                    <div className="relative rounded-xl shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <User className="h-4 w-4 text-orange-400" />
+                                        </div>
+                                        <input
+                                            id="username"
+                                            name="username"
+                                            type="text"
+                                            required
+                                            value={username}
+                                            onChange={(e) => setUsername(e.target.value)}
+                                            className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-11 py-3 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl transition-all"
+                                            placeholder="johndoe"
+                                        />
                                     </div>
-                                    <input
-                                        id="username"
-                                        name="username"
-                                        type="text"
-                                        required
-                                        value={username}
-                                        onChange={(e) => setUsername(e.target.value)}
-                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
-                                        placeholder="johndoe123"
-                                    />
+                                </div>
+
+                                <div>
+                                    <label htmlFor="email" className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1">
+                                        Email Address
+                                    </label>
+                                    <div className="relative rounded-xl shadow-sm">
+                                        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                                            <Mail className="h-4 w-4 text-orange-400" />
+                                        </div>
+                                        <input
+                                            id="email"
+                                            name="email"
+                                            type="email"
+                                            required
+                                            value={email}
+                                            onChange={(e) => setEmail(e.target.value)}
+                                            className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-11 py-3 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl transition-all"
+                                            placeholder="you@email.com"
+                                        />
+                                    </div>
                                 </div>
                             </div>
 
-                            <div>
-                                <label htmlFor="email" className="block text-sm font-medium text-gray-700">
-                                    Email Address
+                            <div className="pt-2">
+                                <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-1 flex items-center gap-1">
+                                    <Navigation className="h-3 w-3" /> Pin Your Delivery Location
                                 </label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Mail className="h-5 w-5 text-orange-400" />
-                                    </div>
-                                    <input
-                                        id="email"
-                                        name="email"
-                                        type="email"
-                                        autoComplete="email"
-                                        required
-                                        value={email}
-                                        onChange={(e) => setEmail(e.target.value)}
-                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
-                                        placeholder="you@example.com"
-                                    />
-                                </div>
+                                <SmartLocationPicker onLocationConfirmed={handleLocationConfirmed} />
                             </div>
 
                             <div>
-                                <label htmlFor="address" className="block text-sm font-medium text-gray-700">
-                                    Complete Delivery Address
+                                <label htmlFor="instructions" className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1 flex items-center gap-1">
+                                    <NotebookText className="h-3 w-3" /> Flat / House No / Instructions
                                 </label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <MapPin className="h-5 w-5 text-orange-400" />
-                                    </div>
-                                    <input
-                                        id="address"
-                                        name="address"
-                                        type="text"
-                                        required
-                                        value={address}
-                                        onChange={(e) => setAddress(e.target.value)}
-                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 pr-12 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
-                                        placeholder="123 Main St, Apt 4"
-                                    />
-                                    <button
-                                        type="button"
-                                        onClick={handleGetLocation}
-                                        disabled={locating}
-                                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-orange-400 hover:text-orange-600 transition-colors"
-                                        title="Use Live Location"
-                                    >
-                                        <Target className={`h-5 w-5 ${locating ? 'animate-ping' : ''}`} />
-                                    </button>
-                                </div>
-                                {coords && (
-                                    <p className="mt-1 text-[10px] font-bold text-green-600 flex items-center">
-                                        <CheckCircle className="h-3 w-3 mr-1" /> GPS Coordinates Captured for Delivery
-                                    </p>
-                                )}
+                                <textarea
+                                    id="instructions"
+                                    value={deliveryInstructions}
+                                    onChange={(e) => setDeliveryInstructions(e.target.value)}
+                                    className="focus:ring-orange-500 focus:border-orange-500 block w-full px-4 py-3 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl transition-all"
+                                    placeholder="e.g. Flat 402, Near Water Tank, Call on arrival"
+                                    rows={2}
+                                />
                             </div>
 
-                            <div>
-                                <label htmlFor="city" className="block text-sm font-medium text-gray-700">
-                                    City
-                                </label>
-                                <div className="mt-1 relative rounded-md shadow-sm">
-                                    <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                                        <Building2 className="h-5 w-5 text-orange-400" />
-                                    </div>
-                                    <input
-                                        id="city"
-                                        name="city"
-                                        type="text"
-                                        required
-                                        value={city}
-                                        onChange={(e) => setCity(e.target.value)}
-                                        className="focus:ring-orange-500 focus:border-orange-500 block w-full pl-10 sm:text-sm border-gray-300 rounded-lg py-3 border shadow-sm transition-colors"
-                                        placeholder="Kakinada"
-                                    />
-                                </div>
-                                <p className="mt-1 text-xs text-orange-500 font-medium">Currently serving only Kakinada region.</p>
-                            </div>
-
-                            <div>
+                            <div className="pt-4">
                                 <button
                                     type="submit"
-                                    className="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-md text-sm font-bold text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all active:scale-95"
+                                    className="group w-full flex justify-center py-4 px-4 border border-transparent rounded-2xl shadow-xl text-sm font-black text-white bg-gray-900 hover:bg-orange-600 transition-all active:scale-95 items-center gap-2"
                                 >
-                                    Continue <ArrowRight className="ml-2 h-5 w-5" />
+                                    Proceed to Security <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                 </button>
+                                <p className="text-[10px] text-center text-gray-400 mt-4 font-bold uppercase tracking-widest">Step 1 of 2: Location Profile</p>
                             </div>
                         </form>
                     ) : (

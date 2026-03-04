@@ -175,7 +175,9 @@ export default function Checkout() {
                 userId: userData?.userId || currentUser.uid,
                 username: userData?.username || currentUser.displayName,
                 email: currentUser.email,
-                address: userData?.address || '',
+                address: userData?.full_address || userData?.address || '',
+                building_name: userData?.building_name || '',
+                landmark: userData?.landmark || '',
                 city: userData?.city || 'Kakinada',
                 mobileNumber: formData.phone,
                 cartItems: cartItems.map(item => {
@@ -196,13 +198,21 @@ export default function Checkout() {
                 distance: deliveryDistance,
                 totalAmount: finalTotal,
                 cookingRequest: formData.cookingRequest || '',
+                deliveryInstructions: userData?.delivery_instructions || '',
                 status: 'Confirmed',
                 createdAt: serverTimestamp(),
                 date: new Date().toLocaleDateString(),
                 time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
                 paymentMethod: 'Cash on Delivery',
                 paymentStatus: 'Pending',
-                transactionId: null
+                transactionId: null,
+                // Location Intelligence Data
+                locationIntelligence: {
+                    latitude: userData?.latitude || null,
+                    longitude: userData?.longitude || null,
+                    landmark: userData?.landmark || '',
+                    building: userData?.building_name || ''
+                }
             };
 
             await setDoc(doc(db, 'orders', newOrderId), currentOrder);
@@ -303,8 +313,14 @@ export default function Checkout() {
                                 </div>
                                 <div className="mt-4 md:mt-0">
                                     <p className="text-sm font-semibold text-gray-500 mb-1">Delivery Target</p>
-                                    <p className="text-base text-gray-900 line-clamp-3">{orderData.address}</p>
-                                    <p className="text-base text-gray-900 font-semibold">{orderData.city}</p>
+                                    <p className="text-base font-black text-gray-900">{orderData.building_name || 'Home'}</p>
+                                    <p className="text-sm text-gray-600 line-clamp-2">{orderData.address}</p>
+                                    {orderData.landmark && (
+                                        <p className="text-[10px] font-black text-orange-600 uppercase italic mt-1 flex items-center gap-1">
+                                            <Landmark className="h-3 w-3" /> Near {orderData.landmark}
+                                        </p>
+                                    )}
+                                    <p className="text-base text-gray-900 font-semibold mt-1">{orderData.city}</p>
                                 </div>
                             </div>
 

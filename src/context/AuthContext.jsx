@@ -20,15 +20,15 @@ export function AuthProvider({ children }) {
     const [userData, setUserData] = useState(null);
     const [loading, setLoading] = useState(true);
 
-    async function signup(email, password, username, address, city, coords) {
+    async function signup(email, password, username, locationData) {
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         if (username) {
             await updateProfile(userCredential.user, { displayName: username });
         }
 
         const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-        const prefix = username.length >= 2
-            ? username.substring(0, 2).toUpperCase()
+        const prefix = username.replace(/[^a-zA-Z]/g, '').length >= 2
+            ? username.replace(/[^a-zA-Z]/g, '').substring(0, 2).toUpperCase()
             : (username.charAt(0) + '0').toUpperCase();
 
         const sequenceRef = doc(db, "sequences", `users_${dateStr}`);
@@ -58,11 +58,14 @@ export function AuthProvider({ children }) {
             userId: customUserId,
             username: username,
             email: email,
-            address: address || "",
-            city: city || "Kakinada",
-            latitude: coords?.lat || null,
-            longitude: coords?.lng || null,
-            createdAt: new Date().toISOString()
+            ...(typeof locationData === 'object' ? locationData : {
+                address: locationData || "",
+                city: "Kakinada",
+                latitude: null,
+                longitude: null
+            }),
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
         };
 
         await setDoc(doc(db, "users", userCredential.user.uid), newUserDoc);
