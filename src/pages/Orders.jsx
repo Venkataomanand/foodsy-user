@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { db } from '../firebase';
 import { collection, query, where, orderBy, onSnapshot, documentId } from 'firebase/firestore';
-import { Package, Truck, MapPin, CheckCircle, Clock, Banknote, CreditCard } from 'lucide-react';
+import { Package, Truck, MapPin, CheckCircle, Clock, Banknote, CreditCard, Landmark } from 'lucide-react';
 
 const STATUS_STEPS = [
     { label: 'Placed', icon: Clock },
