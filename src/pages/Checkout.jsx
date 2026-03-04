@@ -194,6 +194,7 @@ export default function Checkout() {
                 }),
                 subtotal: cartTotal,
                 deliveryFee: deliveryCharge,
+                distance: deliveryDistance,
                 totalAmount: finalTotal,
                 cookingRequest: formData.cookingRequest || '',
                 status: 'Confirmed',
@@ -335,7 +336,10 @@ export default function Checkout() {
                                         <span className="text-gray-900">₹{orderData.subtotal.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between text-sm font-medium mb-3">
-                                        <span className="text-gray-600">Logistics & Delivery</span>
+                                        <div>
+                                            <span className="text-gray-600 block">Logistics & Delivery</span>
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Precise Distance: {orderData.distance?.toFixed(2)} KM</span>
+                                        </div>
                                         <span className="text-gray-900">₹{orderData.deliveryFee.toFixed(2)}</span>
                                     </div>
                                     <div className="flex justify-between items-center bg-gray-100 p-3 rounded-lg border border-gray-200 shadow-inner">
