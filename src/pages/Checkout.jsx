@@ -79,11 +79,13 @@ export default function Checkout() {
     };
 
     const calculateDeliveryCharge = (dist) => {
-        if (dist === 0) return 0;
-        if (dist <= 1) return 20;
-        // ₹20 for first km + ₹10 for every additional km
-        const extraKm = Math.ceil(dist - 1);
-        return 20 + (extraKm * 10);
+        if (dist <= 0) return 0;
+        const totalDist = Number(dist);
+        if (totalDist <= 1) return 20;
+
+        // ₹20 for first km + ₹10 for every additional km (or part thereof)
+        const additionalKm = Math.ceil(totalDist - 1);
+        return 20 + (additionalKm * 10);
     };
 
     useEffect(() => {
@@ -94,8 +96,8 @@ export default function Checkout() {
             );
 
             // User Location
-            const userLat = userData.latitude || (AREAS.find(a => userData.address?.includes(a.name))?.lat) || 16.974;
-            const userLng = userData.longitude || (AREAS.find(a => userData.address?.includes(a.name))?.lng) || 82.242;
+            const userLat = Number(userData.latitude) || (AREAS.find(a => userData.address?.toLowerCase().includes(a.name.toLowerCase()))?.lat) || 16.974;
+            const userLng = Number(userData.longitude) || (AREAS.find(a => userData.address?.toLowerCase().includes(a.name.toLowerCase()))?.lng) || 82.242;
 
             // Source Location
             let sourceLat = 16.974; // Default to JNTUK Area
@@ -109,19 +111,26 @@ export default function Checkout() {
                 const firstItemResId = cartItems[0].restaurantId;
                 const activeRes = restaurants.find(r => r.id === firstItemResId);
                 if (activeRes && activeRes.latitude && activeRes.longitude) {
-                    sourceLat = activeRes.latitude;
-                    sourceLng = activeRes.longitude;
+                    sourceLat = Number(activeRes.latitude);
+                    sourceLng = Number(activeRes.longitude);
                 }
             }
 
             const dist = calculateHaversine(sourceLat, sourceLng, userLat, userLng);
+            console.log("🚚 Delivery Calculation:", { source: [sourceLat, sourceLng], dest: [userLat, userLng], dist });
             setDeliveryDistance(dist);
 
-            // Rules: First 1 KM -> ₹15, After -> +₹10 each extra (rounded UP)
-            const fee = calculateDeliveryCharge(dist);
+            // Calculation: 1st KM = 20, Every extra KM (even partial) = 10
+            let fee = 20;
+            if (dist > 1) {
+                fee = 20 + Math.ceil(dist - 1) * 10;
+            } else if (dist <= 0) {
+                fee = 0;
+            }
+
             setDeliveryCharge(fee);
         }
-    }, [userData, cartItems]);
+    }, [userData, cartItems, restaurants]);
 
     const handleAreaChange = (e) => {
         // Obsolete
