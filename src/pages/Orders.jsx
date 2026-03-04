@@ -153,8 +153,8 @@ export default function Orders() {
                             </div>
 
                             <div className="p-6">
-                                <div className="mb-8">
-                                    <p className="font-medium text-gray-700 mb-2">Items:</p>
+                                <div className="mb-4">
+                                    <p className="font-black text-[10px] uppercase text-gray-400 tracking-widest mb-3">Items Highlights:</p>
                                     <div className="space-y-2">
                                         {(order.cartItems || order.items || []).map((i, idx) => (
                                             <div key={idx} className="flex justify-between items-center text-sm border-b border-gray-50 pb-2">
@@ -169,42 +169,64 @@ export default function Orders() {
                                         ))}
                                     </div>
                                 </div>
-
-                                {/* Progress Bar */}
-                                <div className="relative">
-                                    <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 transform -translate-y-1/2" />
-                                    <div
-                                        className="absolute top-1/2 left-0 h-1 bg-primary -z-10 transform -translate-y-1/2 transition-all duration-500"
-                                        style={{ width: `${(currentStep / (STATUS_STEPS.length - 1)) * 100}%` }}
-                                    />
-
-                                    <div className="flex justify-between w-full">
-                                        {STATUS_STEPS.map((step, index) => {
-                                            const Icon = step.icon;
-                                            const isCompleted = index <= currentStep;
-                                            const isCurrent = index === currentStep;
-
-                                            return (
-                                                <div key={step.label} className="flex flex-col items-center">
-                                                    <div
-                                                        className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-white transition-colors duration-300 ${isCompleted ? 'border-primary text-primary' : 'border-gray-300 text-gray-400'
-                                                            } ${isCurrent ? 'ring-4 ring-primary/20' : ''}`}
-                                                    >
-                                                        <Icon className="w-5 h-5" />
-                                                    </div>
-                                                    <span className={`mt-2 text-xs sm:text-sm font-medium ${isCompleted ? 'text-primary' : 'text-gray-500'}`}>
-                                                        {step.label}
-                                                    </span>
-                                                </div>
-                                            );
-                                        })}
+                                <div className="mt-6 pt-4 border-t border-gray-100">
+                                    <p className="font-black text-[10px] uppercase text-gray-400 tracking-widest mb-3 flex items-center gap-2">
+                                        <MapPin className="h-3 w-3" /> Delivery Location
+                                    </p>
+                                    <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
+                                        <div className="flex flex-col gap-1">
+                                            <p className="text-sm font-black text-gray-900 leading-tight">{order.building_name || 'Home Address'}</p>
+                                            {(order.floor_number || order.gate_details) && (
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">
+                                                    {order.floor_number ? `Floor: ${order.floor_number}` : ''}
+                                                    {order.gate_details ? ` • Gate: ${order.gate_details}` : ''}
+                                                </p>
+                                            )}
+                                            <p className="text-xs text-gray-600 leading-relaxed mt-1">{order.address || order.full_address}</p>
+                                            {order.landmark && (
+                                                <p className="text-[10px] font-black text-orange-600 uppercase italic mt-1 bg-orange-50 inline-block w-fit px-2 py-0.5 rounded-lg">
+                                                    Near {order.landmark}
+                                                </p>
+                                            )}
+                                        </div>
                                     </div>
+                                </div>
+                            </div>
+
+                            {/* Progress Bar */}
+                            <div className="relative">
+                                <div className="absolute top-1/2 left-0 w-full h-1 bg-gray-200 -z-10 transform -translate-y-1/2" />
+                                <div
+                                    className="absolute top-1/2 left-0 h-1 bg-primary -z-10 transform -translate-y-1/2 transition-all duration-500"
+                                    style={{ width: `${(currentStep / (STATUS_STEPS.length - 1)) * 100}%` }}
+                                />
+
+                                <div className="flex justify-between w-full">
+                                    {STATUS_STEPS.map((step, index) => {
+                                        const Icon = step.icon;
+                                        const isCompleted = index <= currentStep;
+                                        const isCurrent = index === currentStep;
+
+                                        return (
+                                            <div key={step.label} className="flex flex-col items-center">
+                                                <div
+                                                    className={`w-10 h-10 rounded-full flex items-center justify-center border-2 bg-white transition-colors duration-300 ${isCompleted ? 'border-primary text-primary' : 'border-gray-300 text-gray-400'
+                                                        } ${isCurrent ? 'ring-4 ring-primary/20' : ''}`}
+                                                >
+                                                    <Icon className="w-5 h-5" />
+                                                </div>
+                                                <span className={`mt-2 text-xs sm:text-sm font-medium ${isCompleted ? 'text-primary' : 'text-gray-500'}`}>
+                                                    {step.label}
+                                                </span>
+                                            </div>
+                                        );
+                                    })}
                                 </div>
                             </div>
                         </div>
                     );
                 })}
             </div>
-        </div>
+        </div >
     );
 }
