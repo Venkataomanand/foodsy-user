@@ -178,14 +178,19 @@ export default function Checkout() {
                 address: userData?.address || '',
                 city: userData?.city || 'Kakinada',
                 mobileNumber: formData.phone,
-                cartItems: cartItems.map(item => ({
-                    productId: item.id,
-                    name: item.name,
-                    price: item.price,
-                    quantity: item.quantity,
-                    selectedOption: item.selectedOption || null,
-                    unit: item.unit || null
-                })),
+                cartItems: cartItems.map(item => {
+                    const restaurant = restaurants.find(r => r.id === item.restaurantId);
+                    return {
+                        productId: item.id,
+                        name: item.name,
+                        price: item.price,
+                        quantity: item.quantity,
+                        selectedOption: item.selectedOption || null,
+                        unit: item.unit || null,
+                        restaurantId: item.restaurantId || null,
+                        restaurantName: restaurant ? restaurant.name : 'Foodsy Direct'
+                    };
+                }),
                 subtotal: cartTotal,
                 deliveryFee: deliveryCharge,
                 totalAmount: finalTotal,
@@ -304,17 +309,22 @@ export default function Checkout() {
                             <div className="space-y-4">
                                 <h4 className="text-sm font-bold text-gray-500 uppercase tracking-widest border-b border-gray-200 pb-2">Order Summary</h4>
                                 {orderData.cartItems.map((item, idx) => (
-                                    <div key={idx} className="flex justify-between items-center text-sm">
-                                        <div className="flex items-center space-x-2">
-                                            <span className="font-black text-gray-700">{item.quantity}x</span>
-                                            <span className="text-gray-800 font-medium">{item.name}</span>
-                                            {item.selectedOption && (
-                                                <span className="px-2 py-0.5 bg-gray-200 text-gray-600 text-[10px] font-bold rounded uppercase">
-                                                    {item.selectedOption}
+                                    <div key={idx} className="bg-white p-3 rounded-lg border border-gray-100 flex flex-col gap-1">
+                                        <div className="flex justify-between items-start">
+                                            <div>
+                                                <h5 className="font-black text-gray-900 text-sm">{item.name}</h5>
+                                                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-tight">from: {item.restaurantName}</p>
+                                            </div>
+                                            <span className="font-black text-primary">₹{(item.price * item.quantity).toFixed(2)}</span>
+                                        </div>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="bg-primary/10 text-primary text-[10px] font-black px-2 py-0.5 rounded uppercase">QTY: {item.quantity}</span>
+                                            {(item.selectedOption || item.unit) && (
+                                                <span className="bg-gray-100 text-gray-500 text-[10px] font-black px-2 py-0.5 rounded uppercase">
+                                                    Weight: {item.selectedOption || item.unit}
                                                 </span>
                                             )}
                                         </div>
-                                        <span className="font-bold text-gray-900">₹{(item.price * item.quantity).toFixed(2)}</span>
                                     </div>
                                 ))}
                                 <div className="border-t border-gray-200 pt-4 mt-2">
