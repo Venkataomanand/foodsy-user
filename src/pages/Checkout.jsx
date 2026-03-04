@@ -68,14 +68,14 @@ export default function Checkout() {
     };
 
     const calculateHaversine = (lat1, lon1, lat2, lon2) => {
-        const R = 6371;
+        const R = 6371; // Earth's radius in KM
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
             Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
             Math.sin(dLon / 2) * Math.sin(dLon / 2);
         const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        return Math.ceil(R * c);
+        return R * c; // Actual distance in KM (float)
     };
 
     const calculateDeliveryCharge = (dist) => {
@@ -480,6 +480,7 @@ export default function Checkout() {
 
                     <div className="border-t border-gray-200 pt-6 flex justify-between items-center">
                         <div className="flex flex-col">
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Distance: {deliveryDistance.toFixed(2)} KM</span>
                             <span className="text-sm text-gray-500">Delivery Charge: ₹{deliveryCharge.toFixed(2)}</span>
                             <span className="text-lg font-bold">Total: ₹{(cartTotal + deliveryCharge).toFixed(2)}</span>
                         </div>

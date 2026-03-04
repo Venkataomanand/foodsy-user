@@ -41,13 +41,25 @@ export default function Signup() {
 
         setLocating(true);
         navigator.geolocation.getCurrentPosition(
-            (position) => {
-                setCoords({
-                    lat: position.coords.latitude,
-                    lng: position.coords.longitude
-                });
+            async (position) => {
+                const { latitude, longitude } = position.coords;
+                setCoords({ lat: latitude, lng: longitude });
+
+                try {
+                    // Reverse geocoding using Nominatim (Free)
+                    const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`);
+                    const data = await response.json();
+                    if (data && data.display_name) {
+                        setAddress(data.display_name);
+                    } else {
+                        setAddress(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                    }
+                } catch (geoErr) {
+                    console.error("Reverse geocoding failed:", geoErr);
+                    setAddress(`Location: ${latitude.toFixed(4)}, ${longitude.toFixed(4)}`);
+                }
+
                 setLocating(false);
-                // Success haptic
                 if (navigator.vibrate) navigator.vibrate(50);
             },
             (err) => {
@@ -55,7 +67,7 @@ export default function Signup() {
                 setError("Unable to retrieve your location. Please type your address manually.");
                 setLocating(false);
             },
-            { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     };
 
