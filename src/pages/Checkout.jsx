@@ -78,14 +78,11 @@ export default function Checkout() {
         return R * c; // Actual distance in KM (float)
     };
 
-    const calculateDeliveryCharge = (dist) => {
+    // Unified calculation logic: 1st KM = 20, Subsequent = 10/KM (rounded up)
+    const calculateDeliveryFee = (dist) => {
         if (dist <= 0) return 0;
-        const totalDist = Number(dist);
-        if (totalDist <= 1) return 20;
-
-        // ₹20 for first km + ₹10 for every additional km (or part thereof)
-        const additionalKm = Math.ceil(totalDist - 1);
-        return 20 + (additionalKm * 10);
+        if (dist <= 1) return 20;
+        return 20 + Math.ceil(dist - 1) * 10;
     };
 
     useEffect(() => {
@@ -120,14 +117,7 @@ export default function Checkout() {
             console.log("🚚 Delivery Calculation:", { source: [sourceLat, sourceLng], dest: [userLat, userLng], dist });
             setDeliveryDistance(dist);
 
-            // Calculation: 1st KM = 20, Every extra KM (even partial) = 10
-            let fee = 20;
-            if (dist > 1) {
-                fee = 20 + Math.ceil(dist - 1) * 10;
-            } else if (dist <= 0) {
-                fee = 0;
-            }
-
+            const fee = calculateDeliveryFee(dist);
             setDeliveryCharge(fee);
         }
     }, [userData, cartItems, restaurants]);
@@ -493,8 +483,15 @@ export default function Checkout() {
 
                     <div className="border-t border-gray-200 pt-6 flex justify-between items-center">
                         <div className="flex flex-col">
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">Distance: {deliveryDistance.toFixed(2)} KM</span>
-                            <span className="text-sm text-gray-500">Delivery Charge: ₹{deliveryCharge.toFixed(2)}</span>
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-widest">
+                                Distance: {deliveryDistance.toFixed(2)} KM
+                            </span>
+                            <div className="flex items-center gap-1">
+                                <span className="text-sm text-gray-500">Delivery Charge: ₹{deliveryCharge.toFixed(2)}</span>
+                                <span className="text-[9px] text-primary bg-primary/5 px-1 rounded font-black uppercase">
+                                    (₹20 + ₹10/km)
+                                </span>
+                            </div>
                             <span className="text-lg font-bold">Total: ₹{(cartTotal + deliveryCharge).toFixed(2)}</span>
                         </div>
                         <button
