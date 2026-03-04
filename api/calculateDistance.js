@@ -46,8 +46,13 @@ export default async function handler(req, res) {
             durationMinutes = Math.ceil(distanceKM * 4);
         }
 
-        const deliveryCharge = parseFloat((Math.min(distanceKM, 10) * 10).toFixed(2));
-        const status = distanceKM <= 10 ? 'SERVICEABLE' : 'OUT_OF_RANGE';
+        // Swiggy Standard Pricing: ₹20 base for first 1km + ₹10 every remaining km 
+        let deliveryCharge = 20;
+        if (distanceKM > 1) {
+            deliveryCharge += Math.ceil(distanceKM - 1) * 10;
+        }
+
+        const status = distanceKM <= 15 ? 'SERVICEABLE' : 'OUT_OF_RANGE';
 
         return res.status(200).json({
             gps_accuracy_meters: accuracy,

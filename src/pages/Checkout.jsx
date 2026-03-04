@@ -31,6 +31,7 @@ export default function Checkout() {
     const [deliveryCharge, setDeliveryCharge] = useState(0);
     const [deliveryDuration, setDeliveryDuration] = useState(0);
     const [distanceError, setDistanceError] = useState(false);
+    const [showFullAddress, setShowFullAddress] = useState(false);
 
     const AREAS = [
         { name: "Sarpavaram", distance: 3, lat: 16.985, lng: 82.250 },
@@ -500,24 +501,63 @@ export default function Checkout() {
                                 />
                             </div>
 
-                            <div className="sm:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700">Home Address</label>
-                                <input
-                                    type="text"
-                                    disabled
-                                    value={userData?.address || ''}
-                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed"
-                                />
-                            </div>
+                            <div className="sm:col-span-6 bg-gray-50 border border-gray-200 rounded-xl p-4">
+                                <div className="flex justify-between items-start mb-2">
+                                    <h3 className="font-black text-gray-900 flex items-center gap-2">
+                                        <MapPin className="h-5 w-5 text-primary" /> Home Address
+                                    </h3>
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowFullAddress(!showFullAddress)}
+                                        className="text-xs font-bold text-blue-600 hover:text-blue-800 bg-blue-50 px-3 py-1.5 rounded-lg transition-colors"
+                                    >
+                                        {showFullAddress ? 'Hide Full Address' : 'Show Full Address'}
+                                    </button>
+                                </div>
 
-                            <div className="sm:col-span-3">
-                                <label className="block text-sm font-medium text-gray-700">City</label>
-                                <input
-                                    type="text"
-                                    disabled
-                                    value={userData?.city || 'Kakinada'}
-                                    className="mt-1 block w-full border border-gray-200 bg-gray-50 rounded-md shadow-sm py-2 px-3 text-gray-500 sm:text-sm cursor-not-allowed font-bold"
-                                />
+                                {userData?.address ? (
+                                    <>
+                                        <p className="text-sm font-semibold text-gray-800">
+                                            {userData?.building_name || userData?.username}
+                                        </p>
+                                        <p className="text-sm text-gray-500 mb-2 truncate">
+                                            {userData?.address}
+                                        </p>
+
+                                        {showFullAddress && (
+                                            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 animate-fade-in">
+                                                <div className="col-span-2">
+                                                    <label className="block text-[10px] font-black uppercase text-gray-400">Full Formatted Address</label>
+                                                    <p className="text-sm font-medium text-gray-900 mt-1">{userData?.address}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black uppercase text-gray-400">Floor/Suite</label>
+                                                    <p className="text-sm font-medium text-gray-900 mt-1">{userData?.floor_number || '--'}</p>
+                                                </div>
+                                                <div>
+                                                    <label className="block text-[10px] font-black uppercase text-gray-400">Gate/Entrance</label>
+                                                    <p className="text-sm font-medium text-gray-900 mt-1">{userData?.gate_details || '--'}</p>
+                                                </div>
+                                                <div className="col-span-2 bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center">
+                                                    <div>
+                                                        <label className="block text-[10px] font-black uppercase text-gray-400">GPS Coordinates</label>
+                                                        <p className="text-xs font-mono text-gray-600 mt-1">{userData?.latitude}, {userData?.longitude}</p>
+                                                    </div>
+                                                    <div className="text-right">
+                                                        <label className="block text-[10px] font-black uppercase text-gray-400">Accuracy</label>
+                                                        <p className="text-xs font-bold text-green-600 mt-1">±{userData?.accuracy || 15}m</p>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </>
+                                ) : (
+                                    <div className="border-2 border-dashed border-red-200 bg-red-50 p-4 rounded-xl text-center">
+                                        <MapPin className="h-6 w-6 text-red-500 mx-auto mb-2 opacity-50" />
+                                        <p className="text-sm font-black text-red-600 uppercase tracking-widest">No home address saved</p>
+                                        <p className="text-xs text-red-400 mt-1 font-medium">Please update your profile location to order.</p>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="sm:col-span-6">
