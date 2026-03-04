@@ -17,8 +17,7 @@ export default function Profile() {
 
     // Edit form states
     const [editUsername, setEditUsername] = useState('');
-    const [editLocationData, setEditLocationData] = useState(null); // Stores { lat, lng, full_address, building_name, landmark, delivery_zone_status }
-    const [editInstructions, setEditInstructions] = useState('');
+    const [editLocationData, setEditLocationData] = useState(null); // Stores the full location intelligence object
     const [error, setError] = useState('');
     const [saving, setSaving] = useState(false);
     const [shake, setShake] = useState(false);
@@ -37,16 +36,19 @@ export default function Profile() {
                     const data = docSnap.data();
                     setUserData(data);
                     setEditUsername(data.username || currentUser.displayName || '');
-                    setEditInstructions(data.delivery_instructions || '');
+
                     // Prepare initial location for picker if it exists
                     if (data.latitude && data.longitude) {
                         setEditLocationData({
                             lat: Number(data.latitude),
                             lng: Number(data.longitude),
-                            full_address: data.full_address || data.address,
+                            formatted_address: data.formatted_address || data.address,
                             building_name: data.building_name,
-                            landmark: data.landmark,
-                            delivery_zone_status: data.delivery_zone_status
+                            landmark_name: data.landmark_name,
+                            delivery_status: data.delivery_status,
+                            floor_number: data.floor_number,
+                            gate_details: data.gate_details,
+                            delivery_instructions: data.delivery_instructions
                         });
                     }
                 } else {
@@ -85,14 +87,14 @@ export default function Profile() {
     const handleSaveProfile = async (e) => {
         e.preventDefault();
 
-        if (editUsername.length < 3 || !/^[a-zA-Z0-9_]+$/.test(editUsername)) {
+        if (editUsername.length < 3) {
             setError('Username must be at least 3 characters.');
             triggerValidationShake();
             return;
         }
 
-        if (!editLocationData && !userData?.address) { // Check if no new location data and no existing address
-            setError('Please pin your delivery location.');
+        if (!editLocationData) {
+            setError('Please confirm your precise location on the map.');
             triggerValidationShake();
             return;
         }
@@ -104,37 +106,28 @@ export default function Profile() {
             // Update auth profile
             await updateProfile(currentUser, { displayName: editUsername });
 
-            const updatedLocation = editLocationData ? {
-                latitude: editLocationData.lat,
-                longitude: editLocationData.lng,
-                full_address: editLocationData.full_address,
-                building_name: editLocationData.building_name || null,
-                landmark: editLocationData.landmark || null,
-                delivery_zone_status: editLocationData.delivery_zone_status || null,
-                delivery_instructions: editInstructions,
-                updatedAt: new Date().toISOString()
-            } : {
-                // If location picker wasn't used, but instructions were updated
-                delivery_instructions: editInstructions,
+            // Store the full intelligence object
+            const locationToStore = {
+                ...editLocationData,
                 updatedAt: new Date().toISOString()
             };
 
             // Update firestore document
             await updateDoc(doc(db, 'users', currentUser.uid), {
                 username: editUsername,
-                ...updatedLocation
+                ...locationToStore
             });
 
             setUserData(prev => ({
                 ...prev,
                 username: editUsername,
-                ...updatedLocation
+                ...locationToStore
             }));
 
             setIsEditing(false);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
         } catch (err) {
-            setError("Failed to update profile: " + err.message);
+            setError("Update failed: " + err.message);
             triggerValidationShake();
         } finally {
             setSaving(false);
@@ -205,21 +198,28 @@ export default function Profile() {
                                             <div className="bg-white p-2 rounded-xl shadow-sm mr-4">
                                                 <Building2 className="h-5 w-5 text-primary" />
                                             </div>
-                                            <div>
+                                            <div className="flex-1">
                                                 <p className="text-sm font-black text-gray-900 leading-tight">
                                                     {userData?.building_name || 'Home/Office'}
                                                 </p>
-                                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{userData?.full_address || userData?.address || 'No address provided'}</p>
+                                                <p className="text-[10px] font-bold text-gray-400 mt-1 uppercase tracking-tight">
+                                                    {userData?.floor_number ? `Floor: ${userData.floor_number}` : ''}
+                                                    {userData?.gate_details ? ` • Gate: ${userData.gate_details}` : ''}
+                                                </p>
+                                                <p className="text-xs text-gray-500 mt-1 line-clamp-2">{userData?.formatted_address || userData?.address || 'No address provided'}</p>
+                                            </div>
+                                            <div className={`px-2 py-1 rounded-lg text-[8px] font-black uppercase tracking-widest ${userData?.delivery_status === 'SERVICEABLE' ? 'bg-green-100 text-green-600' : 'bg-red-100 text-red-600'}`}>
+                                                {userData?.delivery_status || 'Checking...'}
                                             </div>
                                         </div>
 
-                                        {userData?.landmark && (
+                                        {userData?.landmark_name && (
                                             <div className="flex items-start">
                                                 <div className="bg-white p-2 rounded-xl shadow-sm mr-4">
                                                     <Landmark className="h-5 w-5 text-orange-400" />
                                                 </div>
                                                 <div>
-                                                    <p className="text-sm font-bold text-gray-800">Near {userData?.landmark}</p>
+                                                    <p className="text-sm font-bold text-gray-800">Near {userData?.landmark_name}</p>
                                                     <p className="text-[10px] font-black uppercase text-gray-400 tracking-widest mt-0.5">Verified Landmark</p>
                                                 </div>
                                             </div>
@@ -264,24 +264,11 @@ export default function Profile() {
 
                                     <div className="pt-2">
                                         <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-1 flex items-center gap-1">
-                                            <Navigation className="h-3 w-3" /> Update Map Location
+                                            <Navigation className="h-3 w-3" /> Update Precise Location & Details
                                         </label>
                                         <SmartLocationPicker
                                             onLocationConfirmed={handleLocationConfirmed}
                                             initialCoords={userData?.latitude ? { lat: Number(userData.latitude), lng: Number(userData.longitude) } : null}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <label className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1 flex items-center gap-1">
-                                            <NotebookText className="h-3 w-3" /> Delivery Instructions
-                                        </label>
-                                        <textarea
-                                            value={editInstructions}
-                                            onChange={(e) => setEditInstructions(e.target.value)}
-                                            className="focus:ring-orange-500 focus:border-orange-500 block w-full px-4 py-3 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl transition-all"
-                                            placeholder="Apt/Flat No, Landmarks, etc."
-                                            rows={2}
                                         />
                                     </div>
 
@@ -291,8 +278,7 @@ export default function Profile() {
                                             onClick={() => {
                                                 setIsEditing(false);
                                                 setError('');
-                                                setEditUsername(userData?.username || currentUser?.displayName || '');
-                                                setEditInstructions(userData?.delivery_instructions || '');
+                                                setEditUsername(userData?.username || '');
                                             }}
                                             className="flex-1 flex justify-center py-4 px-4 rounded-2xl text-gray-600 bg-gray-50 hover:bg-gray-100 font-black transition-all shadow-sm active:scale-95"
                                         >
@@ -306,7 +292,7 @@ export default function Profile() {
                                             {saving ? (
                                                 <Loader className="animate-spin h-5 w-5" />
                                             ) : (
-                                                <><Check className="h-5 w-5" /> Save Profile</>
+                                                <><Check className="h-5 w-5" /> Update Profile Intelligence</>
                                             )}
                                         </button>
                                     </div>

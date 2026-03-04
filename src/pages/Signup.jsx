@@ -11,7 +11,6 @@ export default function Signup() {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [locationData, setLocationData] = useState(null);
-    const [deliveryInstructions, setDeliveryInstructions] = useState('');
 
     // Step 2 fields
     const [password, setPassword] = useState('');
@@ -82,11 +81,8 @@ export default function Signup() {
         try {
             setError('');
             setLoading(true);
-            const userFullLocation = {
-                ...locationData,
-                delivery_instructions: deliveryInstructions
-            };
-            await signup(email, password, username, userFullLocation);
+
+            await signup(email, password, username, locationData);
             if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Success haptics
             navigate('/');
         } catch (err) {
@@ -178,23 +174,9 @@ export default function Signup() {
 
                             <div className="pt-2">
                                 <label className="block text-[10px] font-black uppercase text-gray-400 mb-2 ml-1 flex items-center gap-1">
-                                    <Navigation className="h-3 w-3" /> Pin Your Delivery Location
+                                    <Navigation className="h-3 w-3" /> Pin Your Precise Delivery Location
                                 </label>
                                 <SmartLocationPicker onLocationConfirmed={handleLocationConfirmed} />
-                            </div>
-
-                            <div>
-                                <label htmlFor="instructions" className="block text-[10px] font-black uppercase text-gray-400 mb-1 ml-1 flex items-center gap-1">
-                                    <NotebookText className="h-3 w-3" /> Flat / House No / Instructions
-                                </label>
-                                <textarea
-                                    id="instructions"
-                                    value={deliveryInstructions}
-                                    onChange={(e) => setDeliveryInstructions(e.target.value)}
-                                    className="focus:ring-orange-500 focus:border-orange-500 block w-full px-4 py-3 text-sm font-bold border-gray-100 bg-gray-50 rounded-2xl transition-all"
-                                    placeholder="e.g. Flat 402, Near Water Tank, Call on arrival"
-                                    rows={2}
-                                />
                             </div>
 
                             <div className="pt-4">
@@ -204,7 +186,7 @@ export default function Signup() {
                                 >
                                     Proceed to Security <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
                                 </button>
-                                <p className="text-[10px] text-center text-gray-400 mt-4 font-bold uppercase tracking-widest">Step 1 of 2: Location Profile</p>
+                                <p className="text-[10px] text-center text-gray-400 mt-4 font-bold uppercase tracking-widest leading-none">Step 1: Precise Intelligence Profile</p>
                             </div>
                         </form>
                     ) : (

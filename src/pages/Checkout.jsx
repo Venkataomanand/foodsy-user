@@ -199,6 +199,8 @@ export default function Checkout() {
                 totalAmount: finalTotal,
                 cookingRequest: formData.cookingRequest || '',
                 deliveryInstructions: userData?.delivery_instructions || '',
+                floor_number: userData?.floor_number || '',
+                gate_details: userData?.gate_details || '',
                 status: 'Confirmed',
                 createdAt: serverTimestamp(),
                 date: new Date().toLocaleDateString(),
@@ -210,8 +212,12 @@ export default function Checkout() {
                 locationIntelligence: {
                     latitude: userData?.latitude || null,
                     longitude: userData?.longitude || null,
-                    landmark: userData?.landmark || '',
-                    building: userData?.building_name || ''
+                    landmark: userData?.landmark_name || userData?.landmark || '',
+                    landmark_distance: userData?.landmark_distance_meters || '',
+                    building: userData?.building_name || '',
+                    floor: userData?.floor_number || '',
+                    gate: userData?.gate_details || '',
+                    delivery_status: userData?.delivery_status || ''
                 }
             };
 
@@ -313,14 +319,25 @@ export default function Checkout() {
                                 </div>
                                 <div className="mt-4 md:mt-0">
                                     <p className="text-sm font-semibold text-gray-500 mb-1">Delivery Target</p>
-                                    <p className="text-base font-black text-gray-900">{orderData.building_name || 'Home'}</p>
+                                    <p className="text-base font-black text-gray-900 leading-tight">{orderData.building_name || 'Home'}</p>
+                                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest my-1">
+                                        {orderData.floor_number ? `Floor: ${orderData.floor_number}` : ''}
+                                        {orderData.gate_details ? ` • Gate: ${orderData.gate_details}` : ''}
+                                    </p>
                                     <p className="text-sm text-gray-600 line-clamp-2">{orderData.address}</p>
-                                    {orderData.landmark && (
-                                        <p className="text-[10px] font-black text-orange-600 uppercase italic mt-1 flex items-center gap-1">
-                                            <Landmark className="h-3 w-3" /> Near {orderData.landmark}
-                                        </p>
+                                    {(orderData.landmark || orderData.locationIntelligence?.landmark) && (
+                                        <div className="mt-2 space-y-1">
+                                            <p className="text-[10px] font-black text-orange-600 uppercase italic flex items-center gap-1">
+                                                <Landmark className="h-3 w-3" /> Near {orderData.landmark || orderData.locationIntelligence.landmark}
+                                            </p>
+                                            {orderData.locationIntelligence?.landmark_distance && (
+                                                <p className="text-[8px] font-bold text-gray-400 uppercase tracking-widest ml-4">
+                                                    Within {orderData.locationIntelligence.landmark_distance} Reach
+                                                </p>
+                                            )}
+                                        </div>
                                     )}
-                                    <p className="text-base text-gray-900 font-semibold mt-1">{orderData.city}</p>
+                                    <p className="text-base text-gray-900 font-semibold mt-2">{orderData.city}</p>
                                 </div>
                             </div>
 
