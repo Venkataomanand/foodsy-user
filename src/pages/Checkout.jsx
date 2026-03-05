@@ -117,7 +117,7 @@ export default function Checkout() {
             if (userData) {
                 const userLat = Number(userData.latitude);
                 const userLng = Number(userData.longitude);
-                const userAcc = userData.accuracy || 15;
+                const userAcc = Number(userData.accuracy) || 15;
 
                 const hasVeggie = cartItems.some(item =>
                     ['Vegetables', 'Fruits', 'Green Leafy Vegetables'].includes(item.category)
@@ -225,9 +225,9 @@ export default function Checkout() {
                 userId: userData?.userId || currentUser.uid,
                 username: userData?.username || currentUser.displayName,
                 email: currentUser.email,
-                address: userData?.full_address || userData?.address || '',
+                address: userData?.formatted_address || userData?.full_address || userData?.address || '',
                 building_name: userData?.building_name || '',
-                landmark: userData?.landmark || '',
+                landmark: userData?.landmark_name || userData?.landmark || '',
                 city: userData?.city || 'Kakinada',
                 mobileNumber: formData.phone,
                 cartItems: cartItems.map(item => {
@@ -519,49 +519,53 @@ export default function Checkout() {
                                     </button>
                                 </div>
 
-                                {userData?.address ? (
-                                    <>
-                                        <p className="text-sm font-semibold text-gray-800">
-                                            {userData?.building_name || userData?.username}
-                                        </p>
-                                        <p className="text-sm text-gray-500 mb-2 truncate">
-                                            {userData?.address}
-                                        </p>
+                                {(() => {
+                                    const displayAddr = userData?.formatted_address || userData?.address || userData?.full_address;
+                                    if (displayAddr) {
+                                        return (
+                                            <>
+                                                <p className="text-sm font-semibold text-gray-800">
+                                                    {userData?.building_name || userData?.username}
+                                                </p>
+                                                <p className="text-sm text-gray-500 mb-2">{displayAddr}</p>
 
-                                        {showFullAddress && (
-                                            <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4 animate-fade-in">
-                                                <div className="col-span-2">
-                                                    <label className="block text-[10px] font-black uppercase text-gray-400">Full Formatted Address</label>
-                                                    <p className="text-sm font-medium text-gray-900 mt-1">{userData?.address}</p>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black uppercase text-gray-400">Floor/Suite</label>
-                                                    <p className="text-sm font-medium text-gray-900 mt-1">{userData?.floor_number || '--'}</p>
-                                                </div>
-                                                <div>
-                                                    <label className="block text-[10px] font-black uppercase text-gray-400">Gate/Entrance</label>
-                                                    <p className="text-sm font-medium text-gray-900 mt-1">{userData?.gate_details || '--'}</p>
-                                                </div>
-                                                <div className="col-span-2 bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center">
-                                                    <div>
-                                                        <label className="block text-[10px] font-black uppercase text-gray-400">GPS Coordinates</label>
-                                                        <p className="text-xs font-mono text-gray-600 mt-1">{userData?.latitude}, {userData?.longitude}</p>
+                                                {showFullAddress && (
+                                                    <div className="mt-4 pt-4 border-t border-gray-200 grid grid-cols-2 gap-4">
+                                                        <div className="col-span-2">
+                                                            <label className="block text-[10px] font-black uppercase text-gray-400">Full Formatted Address</label>
+                                                            <p className="text-sm font-medium text-gray-900 mt-1">{displayAddr}</p>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-black uppercase text-gray-400">Floor/Suite</label>
+                                                            <p className="text-sm font-medium text-gray-900 mt-1">{userData?.floor_number || '--'}</p>
+                                                        </div>
+                                                        <div>
+                                                            <label className="block text-[10px] font-black uppercase text-gray-400">Gate/Entrance</label>
+                                                            <p className="text-sm font-medium text-gray-900 mt-1">{userData?.gate_details || '--'}</p>
+                                                        </div>
+                                                        <div className="col-span-2 bg-white p-3 rounded-lg border border-gray-100 flex justify-between items-center">
+                                                            <div>
+                                                                <label className="block text-[10px] font-black uppercase text-gray-400">GPS Coordinates</label>
+                                                                <p className="text-xs font-mono text-gray-600 mt-1">{userData?.latitude}, {userData?.longitude}</p>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <label className="block text-[10px] font-black uppercase text-gray-400">Accuracy</label>
+                                                                <p className="text-xs font-bold text-green-600 mt-1">±{userData?.accuracy || 15}m</p>
+                                                            </div>
+                                                        </div>
                                                     </div>
-                                                    <div className="text-right">
-                                                        <label className="block text-[10px] font-black uppercase text-gray-400">Accuracy</label>
-                                                        <p className="text-xs font-bold text-green-600 mt-1">±{userData?.accuracy || 15}m</p>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </>
-                                ) : (
-                                    <div className="border-2 border-dashed border-red-200 bg-red-50 p-4 rounded-xl text-center">
-                                        <MapPin className="h-6 w-6 text-red-500 mx-auto mb-2 opacity-50" />
-                                        <p className="text-sm font-black text-red-600 uppercase tracking-widest">No home address saved</p>
-                                        <p className="text-xs text-red-400 mt-1 font-medium">Please update your profile location to order.</p>
-                                    </div>
-                                )}
+                                                )}
+                                            </>
+                                        );
+                                    }
+                                    return (
+                                        <div className="border-2 border-dashed border-red-200 bg-red-50 p-4 rounded-xl text-center">
+                                            <MapPin className="h-6 w-6 text-red-500 mx-auto mb-2 opacity-50" />
+                                            <p className="text-sm font-black text-red-600 uppercase tracking-widest">No home address saved</p>
+                                            <p className="text-xs text-red-400 mt-1 font-medium">Please update your profile location to order.</p>
+                                        </div>
+                                    );
+                                })()}
                             </div>
 
                             <div className="sm:col-span-6">
@@ -644,7 +648,7 @@ export default function Checkout() {
                             {loading ? 'Processing...' : 'Place Order'}
                         </button>
                     </div>
-                </form>
+                </form >
             </div >
         </div >
     );

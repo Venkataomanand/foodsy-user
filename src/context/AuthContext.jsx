@@ -58,7 +58,11 @@ export function AuthProvider({ children }) {
             userId: customUserId,
             username: username,
             email: email,
-            ...(typeof locationData === 'object' ? locationData : {
+            ...(typeof locationData === 'object' ? {
+                ...locationData,
+                // Normalize address field — always readable as userData.address
+                address: locationData.formatted_address || locationData.address || ''
+            } : {
                 address: locationData || "",
                 city: "Kakinada",
                 latitude: null,
