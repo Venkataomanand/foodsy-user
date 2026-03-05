@@ -222,7 +222,8 @@ export default function Checkout() {
             const currentOrder = {
                 orderId: newOrderId,
                 id: newOrderId, // Legacy support
-                userId: userData?.userId || currentUser.uid,
+                userId: currentUser.uid,          // Always Firebase Auth UID for query
+                customUserId: userData?.userId || currentUser.uid,  // Custom ID for reference
                 username: userData?.username || currentUser.displayName,
                 email: currentUser.email,
                 address: userData?.formatted_address || userData?.full_address || userData?.address || '',
